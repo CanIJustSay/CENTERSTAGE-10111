@@ -104,6 +104,7 @@ public class PropDetectionPipeline implements VisionProcessor {
 
         // this converts the frame from RGB to HSV, which is supposed to be better for doing colour blob detection
         Imgproc.cvtColor(frame, frame, Imgproc.COLOR_RGB2HSV);
+
         // thats why you need to give your scalar upper and lower bounds as HSV values
 
         // this method makes the colour image black and white, with everything between your upper and lower bound values as white, and everything else black
@@ -116,7 +117,7 @@ public class PropDetectionPipeline implements VisionProcessor {
         // this basically helps us to find all the shapes/outlines of objects that exist within our colour range
         Imgproc.findContours(frame, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        // this sets up our largest contour area to be 0
+        // this sets up our largest contour area to be -1
         largestContourArea = -1;
         // and our currently found largest contour to be null
         largestContour = null;

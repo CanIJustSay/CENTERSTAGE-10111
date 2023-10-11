@@ -34,7 +34,7 @@ public class DriveConstants {
      * from DriveVelocityPIDTuner.
      */
     public static final boolean RUN_USING_ENCODER = true;
-    public static PIDFCoefficients MOTOR_VELO_PID = new PIDFCoefficients(18, 0, 10,
+    public static PIDFCoefficients MOTOR_VELO_PID = new PIDFCoefficients(22, 0, 10,
             13);
     //f for the other battery is 13.8
 
@@ -88,8 +88,9 @@ public class DriveConstants {
      * You are free to raise this on your own if you would like. It is best determined through experimentation.
 
      */
+    //maxes look a little strange don't they..
     public static double MAX_VEL = 40.38616622399;
-    public static double MAX_ACCEL = 52.48180821614297;
+    public static double MAX_ACCEL = 49.48180821614297; //52
     public static double MAX_ANG_VEL = 49.38616622399;
     public static double MAX_ANG_ACCEL = Math.toRadians(184.02607784577722);
 
