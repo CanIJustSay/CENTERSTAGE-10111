@@ -2,18 +2,28 @@
 package org.firstinspires.ftc.teamcode;
 import android.graphics.Canvas;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.arcrobotics.ftclib.controller.PIDController;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.checkerframework.checker.units.qual.A;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.VisionPortalImpl;
@@ -24,7 +34,17 @@ import org.opencv.core.Mat;
 import java.util.ArrayList;
 import java.util.List;
 
+@Config
 @TeleOp(name="Drive", group=" ")
+/*
+    TODO
+        pixel detection?? for the stack in auto?
+        idea:
+            knock over pixel stack and intake the lowest one?
+            vision to sense the knocked over pixels
+
+
+ */
 public class Drive extends OpMode{
 
     /**
@@ -34,10 +54,22 @@ public class Drive extends OpMode{
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
-    private DcMotor leftFront;
-    private DcMotor rightFront;
-    private DcMotor leftBack;
-    private DcMotor rightBack;
+    IMU imu;
+    RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.FORWARD;
+    RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.LEFT;
+    RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
+
+    private PIDController controller;
+
+    public static double p = 0, i = 0, d = 0;    //PID gains to be tuned
+    public static double f = 0;
+    public static int target = 0;    //target position for the arm
+    public static double tick_in_degrees = 537.6 / 360;
+    private DcMotorEx arm; // not yet on the bot - we will use PIDF gains for this maybe???
+    private DcMotorEx leftFront;
+    private DcMotorEx rightFront;
+    private DcMotorEx leftBack;
+    private DcMotorEx rightBack;
     private DcMotor intake;
 
     private VisionPortal camera;
@@ -58,10 +90,19 @@ public class Drive extends OpMode{
         telemetry.update();
 
 
-        leftFront  = hardwareMap.get(DcMotor.class, "leftFront");
-        rightBack = hardwareMap.get(DcMotor.class, "rightBack");
-        leftBack  = hardwareMap.get(DcMotor.class, "leftBack");
-        rightFront = hardwareMap.get(DcMotor.class, "rightFront");
+        imu = hardwareMap.get(IMU.class,"imu");
+
+
+        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+
+        leftFront  = hardwareMap.get(DcMotorEx.class, "leftFront");
+        rightBack = hardwareMap.get(DcMotorEx.class, "rightBack");
+        leftBack  = hardwareMap.get(DcMotorEx.class, "leftBack");
+        rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
+
+        arm = hardwareMap.get(DcMotorEx.class,"arm");
+
+    //    arm = hardwareMap.get(DcMotorEx.class,"arm"); // not yet on bot - may throw errors
 
         atagProcessor = new AprilTagProcessor.Builder().build();
 
@@ -116,38 +157,51 @@ public class Drive extends OpMode{
             leftBack.setPower((leftStickX - leftStickY - rightStickX) / (rightBumper ? 3 : 1));
             rightFront.setPower((leftStickX - leftStickY + rightStickX) / (rightBumper ? 3 : 1));
             rightBack.setPower((leftStickX + leftStickY - rightStickX) / (rightBumper ? 3 : 1));
-        if( gamepad1.left_bumper){ correct = true; }
-        if(correct){
-            for(AprilTagDetection detection : currentDetections){
-                if(detection.id == targetId){
-                    detYaw = detection.ftcPose.yaw;
-                    detX = detection.ftcPose.x;
-                    detY = detection.ftcPose.y;
-                    if(detX > 2){
-                        leftFront.setPower(-0.3);
-                        leftBack.setPower(0.3);
-                        rightFront.setPower(0.3);
-                        rightBack.setPower(-0.3);
+            controller.setPID(p,i,d);
 
-                    } else if(detX < -2){
+        int armPos = arm.getCurrentPosition();
+        double pid = controller.calculate(armPos,target);
+        double ff = Math.cos(Math.toRadians(target / tick_in_degrees)) * f;
 
-                        leftFront.setPower(0.3);
-                        leftBack.setPower(0.3);
-                        rightFront.setPower(-0.3);
-                        rightBack.setPower(-0.3);
+        target += (gamepad2.left_stick_y * 5);
 
-                    } else{
+        double power;
 
-                        leftFront.setPower(0);
-                        leftBack.setPower(0);
-                        rightFront.setPower(0);
-                        rightBack.setPower(0);
-                    }
-                }
-            }
+        if(arm.getCurrentPosition() > 3500){
+            power = 0;
+        } else {
+            power = pid + ff;
         }
 
+        arm.setPower(power);
+
+
+
+
+
         telemetryAprilTag();
+
+        telemetry.addData("Hub orientation", "Logo=%s   USB=%s\n ", logoDirection, usbDirection);
+
+        // Check to see if heading reset is requested
+        if (gamepad1.y) {
+            telemetry.addData("Yaw", "Resetting\n");
+            imu.resetYaw();
+        } else {
+            telemetry.addData("Yaw", "Press Y (triangle) on Gamepad to reset\n");
+        }
+
+        // Retrieve Rotational Angles and Velocities
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+        AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
+
+        telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
+        telemetry.addData("Pitch (X)", "%.2f Deg.", orientation.getPitch(AngleUnit.DEGREES));
+        telemetry.addData("Roll (Y)", "%.2f Deg.\n", orientation.getRoll(AngleUnit.DEGREES));
+        telemetry.addData("Yaw (Z) velocity", "%.2f Deg/Sec", angularVelocity.zRotationRate);
+        telemetry.addData("Pitch (X) velocity", "%.2f Deg/Sec", angularVelocity.xRotationRate);
+        telemetry.addData("Roll (Y) velocity", "%.2f Deg/Sec", angularVelocity.yRotationRate);
+        telemetry.update();
 
         telemetry.addData("Status", "Run Time: " + runtime.toString());
         telemetry.update();

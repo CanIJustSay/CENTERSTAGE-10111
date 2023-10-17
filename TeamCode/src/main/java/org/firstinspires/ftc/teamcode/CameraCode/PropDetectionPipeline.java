@@ -73,7 +73,7 @@ public class PropDetectionPipeline implements VisionProcessor {
 
     @Override
     public void init(int width, int height, CameraCalibration calibration) {
-        // this method comes with all VisionProcessors, we just don't need to do anything here, and you dont need to call it
+        // this method comes with all VisionProcessors, we just don't need to do anything here, and you don't need to call it
     }
 
     /**
@@ -151,13 +151,21 @@ public class PropDetectionPipeline implements VisionProcessor {
         // if we didn't find any contours which were large enough, sets it to be unfound
         PropPositions propPosition;
         if (largestContour == null) {
+
             propPosition = PropPositions.UNFOUND;
+
         } else if (largestContourX < left.getAsDouble()) {
+
             propPosition = PropPositions.LEFT;
+
         } else if (largestContourX > right.getAsDouble()) {
+
             propPosition = PropPositions.RIGHT;
+
         } else {
+
             propPosition = PropPositions.MIDDLE;
+
         }
 
         // if we have found a new prop position, and it is not unfound, updates the recorded position,
@@ -225,6 +233,6 @@ public class PropDetectionPipeline implements VisionProcessor {
         LEFT,
         MIDDLE,
         RIGHT,
-        UNFOUND;
+        UNFOUND
     }
 }

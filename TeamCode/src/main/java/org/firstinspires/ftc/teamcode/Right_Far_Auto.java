@@ -7,9 +7,11 @@ import static org.firstinspires.ftc.teamcode.CameraCode.PropDetectionPipeline.Pr
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
+import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.CameraCode.PropDetectionPipeline;
@@ -23,17 +25,24 @@ import org.opencv.core.Scalar;
 import java.util.List;
 
 
-@Autonomous
+@Autonomous(preselectTeleOp = "Drive")
 public class Right_Far_Auto extends OpMode {
     private VisionPortal visionPortal;
     private PropDetectionPipeline propProcessor;
     private SampleMecanumDrive drive;
     private AprilTagProcessor atagProcessor;
+    private PIDController controller;
+
+    public static double p = 0, i = 0, d = 0;    //PID gains to be tuned
+    public static double f = 0;
+    public static int target = 0;    //target position for the arm
+    public static double tick_in_degrees = 537.6 / 360;
     private DcMotor leftFront;
     private DcMotor rightFront;
     private DcMotor leftBack;
     private DcMotor rightBack;
     private DcMotor intake;
+    private DcMotorEx arm;
 
     private int targetTag; // what tag should we align with on the backboard - the ID
     private double detX;  // detected X values of the wanted tag
@@ -68,11 +77,11 @@ public class Right_Far_Auto extends OpMode {
         double minArea = 200; // the minimum area for the detection to consider for your prop
 
         drive = new SampleMecanumDrive(hardwareMap);
-
+        controller = new PIDController(p,i,d);
         atagProcessor = new AprilTagProcessor.Builder().build();
 
 
-        //to change that qualifies as middle, change the left and right dividing lines
+        //to change what qualifies as middle, change the left and right dividing lines
         //picture it like this
         /*
         |----------|----------------|----------|
@@ -118,12 +127,11 @@ public class Right_Far_Auto extends OpMode {
 
     @Override
     public void init_loop() {
-//      telemetry.addData("Currently Recorded Position", propProcessor.getRecordedPropPosition());
-//      telemetry.addData("Camera State", visionPortal.getCameraState());
-//      telemetry.addData("Currently Detected Mass Center", "x: " + propProcessor.getLargestContourX() + ", y: " + propProcessor.getLargestContourY());
-//      telemetry.addData("Currently Detected Mass Area", propProcessor.getLargestContourArea());
+        telemetry.addData("Currently Recorded Position", propProcessor.getRecordedPropPosition());
+        //telemetry.addData("Camera State", visionPortal.getCameraState());
+        telemetry.addData("Currently Detected Mass Center", "x: " + propProcessor.getLargestContourX() + ", y: " + propProcessor.getLargestContourY());
+        //telemetry.addData("Currently Detected Mass Area", propProcessor.getLargestContourArea());
         telemetryAprilTag();
-
 
     }
 
@@ -133,7 +141,6 @@ public class Right_Far_Auto extends OpMode {
 /*
         TODO
               check up on rr - could start being dumb again, tuning wise
-              make multiple autos - 2 to be exact - one for left and right alliance side
               widen left and right bounds because middle needs to be larger
 
 
@@ -146,11 +153,11 @@ public class Right_Far_Auto extends OpMode {
         }
 
 
-        Pose2d startPose = new Pose2d(-63.57, -35.82, Math.toRadians(180.00));
+        Pose2d startPose = new Pose2d(-63.57, -35.82, Math.toRadians(0.00));
 
         switch (recordedPropPosition) {
             case LEFT:
-
+                //meep meep tested
                 drive.setPoseEstimate(startPose);
 
                 TrajectorySequence left = drive.trajectorySequenceBuilder(startPose)
@@ -169,9 +176,8 @@ public class Right_Far_Auto extends OpMode {
                 // targetTag = 586;
 
                 drive.setPoseEstimate(startPose);
-
+                //meep meep tested
                 TrajectorySequence middle = drive.trajectorySequenceBuilder(startPose)
-                        .splineTo(new Vector2d(-31.08, -36.18), Math.toRadians(0.00))
                         .splineTo(new Vector2d(-31.08, -36.18), Math.toRadians(0.00))
                         .splineTo(new Vector2d(-36.53, 8.96), Math.toRadians(90.00))
                         .splineTo(new Vector2d(-36.00, 47.94), Math.toRadians(89.31))
@@ -186,7 +192,7 @@ public class Right_Far_Auto extends OpMode {
 
 
                 drive.setPoseEstimate(startPose);
-
+                // meep meep tested
                 TrajectorySequence right = drive.trajectorySequenceBuilder(startPose)
                         .splineTo(new Vector2d(-37.05, -47.24), Math.toRadians(0.00))
                         .splineTo(new Vector2d(-36.53, -22.83), Math.toRadians(90.00))
@@ -212,34 +218,47 @@ public class Right_Far_Auto extends OpMode {
 
         // this works -
         // drives until "Y" is less than 50. use for rr maybe.
-/**
- List<AprilTagDetection> allDets = atagProcessor.getDetections();
- for (AprilTagDetection det : allDets) {
+        /**
+         List<AprilTagDetection> allDets = atagProcessor.getDetections();
+         for (AprilTagDetection det : allDets) {
 
- // targetTag isolated
- if (det.id == targetTag) {
- detX = det.ftcPose.x;
- detY = det.ftcPose.y;
-
-
- if (detY > 50) {
- rightFront.setPower(0.1);
- rightBack.setPower(0.1);
- leftBack.setPower(0.1);
- leftFront.setPower(0.1);
- } else {
-
- rightFront.setPower(0);
- rightBack.setPower(0);
- leftBack.setPower(0);
- leftFront.setPower(0);
- }
+         // targetTag isolated
+         if (det.id == targetTag) {
+         detX = det.ftcPose.x;
+         detY = det.ftcPose.y;
 
 
+         if (detY > 50) {
+         rightFront.setPower(0.1);
+         rightBack.setPower(0.1);
+         leftBack.setPower(0.1);
+         leftFront.setPower(0.1);
+         } else {
 
- }
- }
- */
+         rightFront.setPower(0);
+         rightBack.setPower(0);
+         leftBack.setPower(0);
+         leftFront.setPower(0);
+         }
+
+
+
+         }
+         }
+         */
+
+        /*
+         * TODO
+         *  tune pid gains for arm
+         */
+        controller.setPID(p,i,d);
+        int armPos = arm.getCurrentPosition();
+        double pid = controller.calculate(armPos,target);
+        double ff = Math.cos(Math.toRadians(target / tick_in_degrees)) * f;
+
+        double power = pid + ff;
+
+        arm.setPower(power);
 
     }
 
