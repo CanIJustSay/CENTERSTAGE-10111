@@ -16,23 +16,20 @@ import javax.imageio.ImageIO;
 public class Meep {
     public static void main(String[] args) {
         MeepMeep meepMeep = new MeepMeep(800);
-        Pose2d startPose = new Pose2d(-63.57, -35.82, Math.toRadians(0.00));
+        Pose2d startPose = new Pose2d(15.98,-64.98 , Math.toRadians(90.00));
 
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
-
-
                 .setConstraints(49, 60, Math.toRadians(180), Math.toRadians(180), 15)
                 .followTrajectorySequence(drive ->
 // RFA TESTED
 // LFA TESTED
 // LCA TESTED
 // RCA TESTED
+                    drive.trajectorySequenceBuilder(startPose)
 
-                        drive.trajectorySequenceBuilder(startPose)
-
-                                .splineTo(new Vector2d(-33.01, 22.65), Math.toRadians(90.00))
-                                .splineTo(new Vector2d(-35.65, 49.00), Math.toRadians(90.00))
-                                .build());
+                        .splineTo(new Vector2d(15.98,-50), Math.toRadians(90.00))
+                        .splineTo(new Vector2d(46.9,-36.4), Math.toRadians(0.00))
+                        .build());
 
         meepMeep.setBackground(MeepMeep.Background.FIELD_CENTERSTAGE_JUICE_DARK)
                 .setDarkMode(true)

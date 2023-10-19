@@ -84,6 +84,8 @@ public class Drive extends OpMode{
     private double detX;
     private double detY;
 
+    private DcMotor lift;
+
     @Override
     public void init(){
         telemetry.addData("Status", "Initialized");
@@ -92,6 +94,7 @@ public class Drive extends OpMode{
 
         imu = hardwareMap.get(IMU.class,"imu");
 
+        lift = hardwareMap.get(DcMotor.class,"lift");
 
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
@@ -100,7 +103,7 @@ public class Drive extends OpMode{
         leftBack  = hardwareMap.get(DcMotorEx.class, "leftBack");
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
 
-        arm = hardwareMap.get(DcMotorEx.class,"arm");
+     //   arm = hardwareMap.get(DcMotorEx.class,"arm");
 
     //    arm = hardwareMap.get(DcMotorEx.class,"arm"); // not yet on bot - may throw errors
 
@@ -157,23 +160,25 @@ public class Drive extends OpMode{
             leftBack.setPower((leftStickX - leftStickY - rightStickX) / (rightBumper ? 3 : 1));
             rightFront.setPower((leftStickX - leftStickY + rightStickX) / (rightBumper ? 3 : 1));
             rightBack.setPower((leftStickX + leftStickY - rightStickX) / (rightBumper ? 3 : 1));
-            controller.setPID(p,i,d);
 
-        int armPos = arm.getCurrentPosition();
-        double pid = controller.calculate(armPos,target);
-        double ff = Math.cos(Math.toRadians(target / tick_in_degrees)) * f;
+            lift.setPower(gamepad2.left_stick_y * 5);
+          //  controller.setPID(p,i,d);
 
-        target += (gamepad2.left_stick_y * 5);
-
-        double power;
-
-        if(arm.getCurrentPosition() > 3500){
-            power = 0;
-        } else {
-            power = pid + ff;
-        }
-
-        arm.setPower(power);
+//        int armPos = arm.getCurrentPosition();
+//        double pid = controller.calculate(armPos,target);
+//        double ff = Math.cos(Math.toRadians(target / tick_in_degrees)) * f;
+//
+//        target += (gamepad2.left_stick_y * 5);
+//
+//        double power;
+//
+//        if(arm.getCurrentPosition() > 3500){
+//            power = 0;
+//        } else {
+//            power = pid + ff;
+//        }
+//
+//        arm.setPower(power);
 
 
 

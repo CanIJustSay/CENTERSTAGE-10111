@@ -4,6 +4,8 @@ package org.firstinspires.ftc.teamcode;
 import static org.firstinspires.ftc.teamcode.CameraCode.PropDetectionPipeline.PropPositions.MIDDLE;
 import static org.firstinspires.ftc.teamcode.CameraCode.PropDetectionPipeline.PropPositions.UNFOUND;
 
+import android.util.Size;
+
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
@@ -117,6 +119,7 @@ public class Right_Close_Auto extends OpMode {
         visionPortal = new VisionPortal.Builder()
                 .setCamera(hardwareMap.get(WebcamName.class, "logi")) // the camera on your robot is named "Webcam 1" by default
                 .addProcessors(atagProcessor,propProcessor)
+                .setCameraResolution(new Size(640, 480))
                 .build();
 
         // you may also want to take a look at some of the examples for instructions on
@@ -153,8 +156,8 @@ public class Right_Close_Auto extends OpMode {
             recordedPropPosition = MIDDLE;
         }
 
-
-        Pose2d startPose = new Pose2d(-63.57, 12.12, Math.toRadians(0.00));
+        //right side of mat
+        Pose2d startPose = new Pose2d(15.98,-64.98 , Math.toRadians(90.00));
 
         switch (recordedPropPosition) {
             case LEFT:
@@ -180,10 +183,10 @@ public class Right_Close_Auto extends OpMode {
                 drive.setPoseEstimate(startPose);
 
                 TrajectorySequence traj = drive.trajectorySequenceBuilder(startPose)
-
-                        .splineTo(new Vector2d(-25.99, 11.41), Math.toRadians(0.00))
-                        .splineTo(new Vector2d(-35.82, 50.93), Math.toRadians(90.00))
+                        .splineTo(new Vector2d(startPose.getX(), -37.98), Math.toRadians(90.00))
+                        .splineTo(new Vector2d(39.69, -39.69), Math.toRadians(0.00))
                         .build();
+
 
                 drive.followTrajectorySequence(traj);
 
@@ -211,7 +214,12 @@ public class Right_Close_Auto extends OpMode {
     @Override
     public void loop() {
         // telemetryAprilTag();
-
+        if (visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING) {
+            visionPortal.stopLiveView();
+            visionPortal.stopStreaming();
+        }
+        propProcessor.close();
+        visionPortal.close();
 
         // for rr heading has some error - may be a problem.
         // use "yaw" ONLY after x value is close to 0 relative to the april tag.
