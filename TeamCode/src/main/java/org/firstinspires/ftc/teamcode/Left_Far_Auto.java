@@ -9,6 +9,7 @@ import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -61,9 +62,6 @@ public class Left_Far_Auto extends OpMode {
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
         leftBack  = hardwareMap.get(DcMotor.class, "leftBack");
         rightFront = hardwareMap.get(DcMotor.class, "rightFront");
-
-        leftFront.setDirection(DcMotor.Direction.REVERSE);
-        rightFront.setDirection(DcMotor.Direction.REVERSE);
         // values are for blue
         // not consistent at all.
            //Scalar lower = new Scalar(97,100,100);
@@ -135,6 +133,7 @@ public class Left_Far_Auto extends OpMode {
 
     @Override
     public void start() {
+        propProcessor.close();
 
 /*
         TODO
@@ -151,24 +150,23 @@ public class Left_Far_Auto extends OpMode {
         }
 
         //CENTER OF THE MAT
-        Pose2d startPose = new Pose2d(63.57, -35.82, Math.toRadians(180.00));
+        Pose2d startPose = new Pose2d(-33.89, -63.75, Math.toRadians(90.00));
 
         switch (recordedPropPosition) {
             case LEFT:
 
                 drive.setPoseEstimate(startPose);
 
-                TrajectorySequence left = drive.trajectorySequenceBuilder(startPose)
-                        .splineTo(new Vector2d(36.53, -47.24), Math.toRadians(180.00))
-                        .splineTo(new Vector2d(36.35, -25.99), Math.toRadians(90.00))
-                        .splineTo(new Vector2d(35.65, -0.53), Math.toRadians(90.00))
-                        .splineTo(new Vector2d(36.70, 51.63), Math.toRadians(90.00))
+                TrajectorySequence left =  drive.trajectorySequenceBuilder(startPose)
+                        .splineTo(new Vector2d(-47.77, -39.16), Math.toRadians(90.00))
+                        .setReversed(true)
+                        .splineTo(new Vector2d(-13, -58.9), Math.toRadians(0))
+
+                        .splineTo(new Vector2d(0.93, -58.9), Math.toRadians(0.00))
+                        .splineTo(new Vector2d(47,-28),Math.toRadians(0))
                         .build();
 
                 drive.followTrajectorySequence(left);
-                break;
-
-            case UNFOUND:
                 break;
 
             case MIDDLE:
@@ -177,10 +175,10 @@ public class Left_Far_Auto extends OpMode {
                 drive.setPoseEstimate(startPose);
 
                 TrajectorySequence middle = drive.trajectorySequenceBuilder(startPose)
-                        .splineTo(new Vector2d(25.64, -35.47), Math.toRadians(180.00))
-                        .splineTo(new Vector2d(35.30, -26.17), Math.toRadians(90.00))
-                        .splineTo(new Vector2d(35.47, -1.05), Math.toRadians(90.00))
-                        .splineTo(new Vector2d(36.70, 51.63), Math.toRadians(90.00))
+                        .splineTo(new Vector2d(-33.72, -31.26), Math.toRadians(90.00))
+                        .setReversed(true)
+                        .splineTo(new Vector2d(-10.6,-35.1),Math.toRadians(0))
+                        .splineTo(new Vector2d(50.58, -36.70), Math.toRadians(0.00))
                         .build();
 
                 drive.followTrajectorySequence(middle);
@@ -192,11 +190,14 @@ public class Left_Far_Auto extends OpMode {
 
                 drive.setPoseEstimate(startPose);
 
-                TrajectorySequence right = drive.trajectorySequenceBuilder(startPose)
-                        .splineTo(new Vector2d(36.35, -28.45), Math.toRadians(90.00))
-                        .splineTo(new Vector2d(35.47, -1.05), Math.toRadians(90.00))
-                        .splineTo(new Vector2d(36.70, 51.63), Math.toRadians(90.00))
+                TrajectorySequence right =  drive.trajectorySequenceBuilder(new Pose2d(-33.89, -63.75, Math.toRadians(90.00)))
+                        .splineTo(new Vector2d(-30.73, -38.99), Math.toRadians(45.00))
+                        .setReversed(true)
+                        .splineTo(new Vector2d(-27, -59), Math.toRadians(0.00))
+                        .splineTo(new Vector2d(13.17, -59), Math.toRadians(0.00))
+                        .splineTo(new Vector2d(46.54, -34.42), Math.toRadians(0.00))
                         .build();
+
 
 
                 drive.followTrajectorySequence(right);
@@ -250,27 +251,27 @@ public class Left_Far_Auto extends OpMode {
          * TODO
          *  tune pid gains for arm
          */
-        controller.setPID(p,i,d);
-        int armPos = arm.getCurrentPosition();
-        double pid = controller.calculate(armPos,target);
-        double ff = Math.cos(Math.toRadians(target / tick_in_degrees)) * f;
-
-        double power = pid + ff;
-
-        arm.setPower(power);
+//        controller.setPID(p,i,d);
+//        int armPos = arm.getCurrentPosition();
+//        double pid = controller.calculate(armPos,target);
+//        double ff = Math.cos(Math.toRadians(target / tick_in_degrees)) * f;
+//
+//        double power = pid + ff;
+//
+//        arm.setPower(power);
 
     }
 
     @Override
     public void stop() {
         //shuts down camera
-        if (visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING) {
-            visionPortal.stopLiveView();
-            visionPortal.stopStreaming();
-        }
-        // this closes down the portal when we stop the code
-        propProcessor.close();
-        visionPortal.close();
+//        if (visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING) {
+//            visionPortal.stopLiveView();
+//            visionPortal.stopStreaming();
+//        }
+//        // this closes down the portal when we stop the code
+//        propProcessor.close();
+//        visionPortal.close();
     }
     private void telemetryAprilTag() {
 

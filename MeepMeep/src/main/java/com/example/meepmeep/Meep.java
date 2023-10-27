@@ -16,20 +16,25 @@ import javax.imageio.ImageIO;
 public class Meep {
     public static void main(String[] args) {
         MeepMeep meepMeep = new MeepMeep(800);
-        Pose2d startPose = new Pose2d(15.98,-64.98 , Math.toRadians(90.00));
+        Pose2d startPose = new Pose2d(-33.89, -63.75, Math.toRadians(90.00));
 
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
-                .setConstraints(49, 60, Math.toRadians(180), Math.toRadians(180), 15)
+                .setConstraints(30, 30, Math.toRadians(180), Math.toRadians(180), 15)
                 .followTrajectorySequence(drive ->
-// RFA TESTED
-// LFA TESTED
-// LCA TESTED
-// RCA TESTED
-                    drive.trajectorySequenceBuilder(startPose)
 
-                        .splineTo(new Vector2d(15.98,-50), Math.toRadians(90.00))
-                        .splineTo(new Vector2d(46.9,-36.4), Math.toRadians(0.00))
-                        .build());
+                        drive.trajectorySequenceBuilder(startPose)
+                                .splineTo(new Vector2d(-47.77, -39.16), Math.toRadians(90.00))
+                                .setReversed(true)
+                                .splineTo(new Vector2d(-13, -58.9), Math.toRadians(0))
+                                .splineTo(new Vector2d(0.93, -58.9), Math.toRadians(0.00))
+                                .splineTo(new Vector2d(47,-28),Math.toRadians(0))
+                                .build());
+
+
+
+
+
+
 
         meepMeep.setBackground(MeepMeep.Background.FIELD_CENTERSTAGE_JUICE_DARK)
                 .setDarkMode(true)

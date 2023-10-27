@@ -4,6 +4,8 @@ package org.firstinspires.ftc.teamcode;
 import static org.firstinspires.ftc.teamcode.CameraCode.PropDetectionPipeline.PropPositions.MIDDLE;
 import static org.firstinspires.ftc.teamcode.CameraCode.PropDetectionPipeline.PropPositions.UNFOUND;
 
+import static java.lang.Thread.sleep;
+
 import android.util.Size;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
@@ -67,8 +69,6 @@ public class Right_Close_Auto extends OpMode {
 
     //    arm = hardwareMap.get(DcMotorEx.class,"arm"); // not yet on bot - may throw errors
 
-        leftFront.setDirection(DcMotor.Direction.REVERSE);
-        rightFront.setDirection(DcMotor.Direction.REVERSE);
         // values are for blue
         // not consistent at all.
         //Scalar lower = new Scalar(97,100,100);
@@ -132,10 +132,8 @@ public class Right_Close_Auto extends OpMode {
     @Override
     public void init_loop() {
         telemetry.addData("Currently Recorded Position", propProcessor.getRecordedPropPosition());
-        //telemetry.addData("Camera State", visionPortal.getCameraState());
         telemetry.addData("Currently Detected Mass Center", "x: " + propProcessor.getLargestContourX() + ", y: " + propProcessor.getLargestContourY());
-        //telemetry.addData("Currently Detected Mass Area", propProcessor.getLargestContourArea());
-        telemetryAprilTag();
+        //telemetryAprilTag();
 
     }
 
@@ -156,35 +154,29 @@ public class Right_Close_Auto extends OpMode {
             recordedPropPosition = MIDDLE;
         }
 
-        //right side of mat
-        Pose2d startPose = new Pose2d(15.98,-64.98 , Math.toRadians(90.00));
-
+        //right side of mat(allegedly)
+        Pose2d startPose = new Pose2d(14.5, -63.75, Math.toRadians(90.00));
         switch (recordedPropPosition) {
             case LEFT:
 
                 drive.setPoseEstimate(startPose);
 
                 TrajectorySequence left = drive.trajectorySequenceBuilder(startPose)
-
-                        .splineTo(new Vector2d(-33.01, 22.65), Math.toRadians(90.00))
-                        .splineTo(new Vector2d(-35.65, 49.00), Math.toRadians(90.00))
+                        .splineTo(new Vector2d(6.85,-36.04), Math.toRadians(125.00))
+                        .setReversed(true)
+                        .splineTo(new Vector2d(48.93,-27.22),Math.toRadians(0))
                         .build();
-
                 drive.followTrajectorySequence(left);
                 break;
 
-            case UNFOUND:
-
-                break;
-
             case MIDDLE:
-                // targetTag = 586;
 
                 drive.setPoseEstimate(startPose);
 
-                TrajectorySequence traj = drive.trajectorySequenceBuilder(startPose)
-                        .splineTo(new Vector2d(startPose.getX(), -37.98), Math.toRadians(90.00))
-                        .splineTo(new Vector2d(39.69, -39.69), Math.toRadians(0.00))
+               TrajectorySequence traj = drive.trajectorySequenceBuilder(startPose)
+                        .splineTo(new Vector2d(14.50, -32), Math.toRadians(90.00))
+                        .setReversed(true)
+                        .splineTo(new Vector2d(46.54, -37.23), Math.toRadians(0.00))
                         .build();
 
 
@@ -194,16 +186,13 @@ public class Right_Close_Auto extends OpMode {
 
             case RIGHT:
 
-
                 drive.setPoseEstimate(startPose);
 
                 TrajectorySequence right = drive.trajectorySequenceBuilder(startPose)
-
-                        .splineTo(new Vector2d(-38.99, 6.15), Math.toRadians(-45.00))
-                        .splineTo(new Vector2d(-36.53, 25.29), Math.toRadians(90.00))
-                        .splineTo(new Vector2d(-36.88, 51.28), Math.toRadians(90.00))
+                        .splineTo(new Vector2d(23.65, -41.27), Math.toRadians(90))
+                        .setReversed(true)
+                        .splineTo(new Vector2d(49.63,-43.73),Math.toRadians(0))
                         .build();
-
 
                 drive.followTrajectorySequence(right);
                 break;
@@ -213,13 +202,9 @@ public class Right_Close_Auto extends OpMode {
 
     @Override
     public void loop() {
-        // telemetryAprilTag();
-        if (visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING) {
-            visionPortal.stopLiveView();
-            visionPortal.stopStreaming();
-        }
+        telemetryAprilTag();
         propProcessor.close();
-        visionPortal.close();
+
 
         // for rr heading has some error - may be a problem.
         // use "yaw" ONLY after x value is close to 0 relative to the april tag.
@@ -268,7 +253,6 @@ public class Right_Close_Auto extends OpMode {
 //        double ff = Math.cos(Math.toRadians(target / tick_in_degrees)) * f;
 //
 //        double power = pid + ff;
-//
 //        arm.setPower(power);
 
     }
@@ -276,13 +260,13 @@ public class Right_Close_Auto extends OpMode {
     @Override
     public void stop() {
         //shuts down camera
-        if (visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING) {
-            visionPortal.stopLiveView();
-            visionPortal.stopStreaming();
-        }
-        // this closes down the portal when we stop the code
-        propProcessor.close();
-        visionPortal.close();
+//        if (visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING) {
+//            visionPortal.stopLiveView();
+//            visionPortal.stopStreaming();
+//        }
+//        // this closes down the portal when we stop the code
+//        propProcessor.close();
+//        visionPortal.close();
     }
     private void telemetryAprilTag() {
 

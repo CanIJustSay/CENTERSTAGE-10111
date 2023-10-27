@@ -25,12 +25,6 @@ public class AutoTest extends OpMode {
     public void init(){
         drive = new SampleMecanumDrive(hardwareMap);
 
-        pixelDetectionPipeline = new WhitePixelDetectionPipeline();
-
-        visionPortal = new VisionPortal.Builder()
-                .setCamera(hardwareMap.get(WebcamName.class, "logi"))
-                .addProcessor(pixelDetectionPipeline)
-                .build();
 
 
     }
@@ -43,23 +37,28 @@ public class AutoTest extends OpMode {
     @Override
     public void start(){
 
-        Pose2d startPose = new Pose2d(-8.08, 10.19, Math.toRadians(90.00));
+        Pose2d startPose = new Pose2d(14.5, -63.75, Math.toRadians(90.00));
 
         drive.setPoseEstimate(startPose);
 
-//        TrajectorySequence testTraj = drive.trajectorySequenceBuilder(startPose)
-//                .splineTo(new Vector2d(12.64, 36.70), Math.toRadians(90.00))
-//                .build();
-//
-//        drive.followTrajectorySequence(testTraj);
+//                TrajectorySequence traj = drive.trajectorySequenceBuilder(new Pose2d(14.5, -63.75, Math.toRadians(90.00)))
+//                       // .lineTo(new Vector2d(14.5, -23.59))
+//                        .forward(30)
+////                        .splineTo(new Vector2d(0, -23.59),Math.toRadians(90))
+////                        .waitSeconds(2.0)
+////                        .setReversed(true)
+////                        .splineTo(new Vector2d(37, -20), Math.toRadians(0.00))
+//                        .build();
+        TrajectorySequence traj = drive.trajectorySequenceBuilder(startPose)
+                .lineTo(new Vector2d(14.5,-23.75))
+                .build();
+
+        drive.followTrajectorySequence(traj);
 
     }
 
     @Override
     public void loop(){
-        telemetry.addData("Coordinate", "(" + (int) pixelDetectionPipeline.cX + ", " + (int) pixelDetectionPipeline.cY + ")");
-        telemetry.addData("Distance in Inch", getDistance(pixelDetectionPipeline.width));
-        telemetry.update();
 
 
     }

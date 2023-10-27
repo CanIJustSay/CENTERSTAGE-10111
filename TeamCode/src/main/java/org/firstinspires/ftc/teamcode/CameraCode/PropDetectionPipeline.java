@@ -13,8 +13,10 @@ import org.firstinspires.ftc.vision.VisionProcessor;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 
@@ -30,6 +32,7 @@ public class PropDetectionPipeline implements VisionProcessor {
     private final Paint linePaint;
     private final ArrayList<MatOfPoint> contours;
     private final Mat hierarchy = new Mat();
+    static final Rect sub = new Rect(new Point(0,160), new Point(640,480));
     private double largestContourX;
     private double largestContourY;
     private double largestContourArea;
@@ -102,6 +105,8 @@ public class PropDetectionPipeline implements VisionProcessor {
         // this method processes the image (frame) taken by the camera, and tries to find a suitable prop
         // you dont need to call it
 
+        //looks at a particular part of the mat - defined by a rectangle.
+        //Mat croppedFrame = frame.submat(sub);
         // this converts the frame from RGB to HSV, which is supposed to be better for doing colour blob detection
         Imgproc.cvtColor(frame, frame, Imgproc.COLOR_RGB2HSV);
 

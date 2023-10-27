@@ -71,6 +71,7 @@ public class Drive extends OpMode{
     private DcMotorEx leftBack;
     private DcMotorEx rightBack;
     private DcMotor intake;
+    private boolean enterCorrective;
 
     private VisionPortal camera;
 
@@ -81,6 +82,7 @@ public class Drive extends OpMode{
     private int targetId = 586;
 
     private double detYaw;
+    private CRServo servo;
     private double detX;
     private double detY;
 
@@ -96,6 +98,8 @@ public class Drive extends OpMode{
 
         lift = hardwareMap.get(DcMotor.class,"lift");
 
+        servo = hardwareMap.get(CRServo.class,"servo");
+
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
         leftFront  = hardwareMap.get(DcMotorEx.class, "leftFront");
@@ -103,9 +107,7 @@ public class Drive extends OpMode{
         leftBack  = hardwareMap.get(DcMotorEx.class, "leftBack");
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
 
-     //   arm = hardwareMap.get(DcMotorEx.class,"arm");
-
-    //    arm = hardwareMap.get(DcMotorEx.class,"arm"); // not yet on bot - may throw errors
+        arm = hardwareMap.get(DcMotorEx.class,"arm");
 
         atagProcessor = new AprilTagProcessor.Builder().build();
 
@@ -127,10 +129,13 @@ public class Drive extends OpMode{
     @Override
     public void start(){
         runtime.reset();
+
         leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
     }
     @Override
@@ -151,10 +156,19 @@ public class Drive extends OpMode{
 
         if(gamepad2.left_bumper){
             intake.setPower(1);
+        } else if(gamepad2.right_bumper) {
+            intake.setPower(-1);
         } else {
             intake.setPower(0);
         }
 
+        /**
+         *fL = y+x+r
+         * rL = y-x+r
+         * fR = y-x-r
+         * rR = y+x-r
+         */
+        
             // Set the motor powers
             leftFront.setPower((leftStickX + leftStickY + rightStickX) / (rightBumper ? 3 : 1));
             leftBack.setPower((leftStickX - leftStickY - rightStickX) / (rightBumper ? 3 : 1));
@@ -162,6 +176,44 @@ public class Drive extends OpMode{
             rightBack.setPower((leftStickX + leftStickY - rightStickX) / (rightBumper ? 3 : 1));
 
             lift.setPower(gamepad2.left_stick_y * 5);
+            if(gamepad1.left_bumper){ enterCorrective = true; }
+
+            //scissor lift.
+            if(gamepad2.a){
+                servo.setPower(-1);
+            } else if(gamepad2.b){
+                servo.setPower(1);
+            } else {
+                servo.setPower(0);
+            }
+
+            /*
+            if(enterCorrective){
+                for(AprilTagDetection dets : currentDetections){
+                    //redAlliance Left
+                    if(dets.id == 4) {
+                        if(dets.ftcPose.y < 28){
+                            leftFront.setPower(-0.1);
+                            leftBack.setPower(-0.1);
+                            rightFront.setPower(-0.1);
+                            rightBack.setPower(-0.1);
+                        } else if(dets.ftcPose.y > 28){
+                            leftFront.setPower(0.1);
+                            leftBack.setPower(0.1);
+                            rightFront.setPower(0.1);
+                            rightBack.setPower(0.1);
+                        } else {
+                            leftFront.setPower(0);
+                            leftBack.setPower(0);
+                            rightFront.setPower(0);
+                            rightBack.setPower(0);
+                        }
+
+                    }
+                }
+            }
+*/
+
           //  controller.setPID(p,i,d);
 
 //        int armPos = arm.getCurrentPosition();
@@ -179,6 +231,8 @@ public class Drive extends OpMode{
 //        }
 //
 //        arm.setPower(power);
+
+        arm.setPower(-gamepad2.left_stick_y);
 
 
 
