@@ -4,12 +4,14 @@ package org.firstinspires.ftc.teamcode;
 import static org.firstinspires.ftc.teamcode.CameraCode.PropDetectionPipeline.PropPositions.MIDDLE;
 import static org.firstinspires.ftc.teamcode.CameraCode.PropDetectionPipeline.PropPositions.UNFOUND;
 
+import static java.lang.Thread.sleep;
+
+import android.util.Size;
+
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
-import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -27,7 +29,7 @@ import java.util.List;
 
 
 @Autonomous(preselectTeleOp = "Drive")
-public class Right_Far_Auto extends OpMode {
+public class Red_Right extends OpMode {
     private VisionPortal visionPortal;
     private PropDetectionPipeline propProcessor;
     private SampleMecanumDrive drive;
@@ -38,10 +40,6 @@ public class Right_Far_Auto extends OpMode {
     public static double f = 0;
     public static int target = 0;    //target position for the arm
     public static double tick_in_degrees = 537.6 / 360;
-    private DcMotor leftFront;
-    private DcMotor rightFront;
-    private DcMotor leftBack;
-    private DcMotor rightBack;
     private DcMotor intake;
     private DcMotorEx arm;
 
@@ -59,10 +57,8 @@ public class Right_Far_Auto extends OpMode {
         // the domains are: ([0, 180], [0, 255], [0, 255])
         // this is tuned to detect red, so you will need to experiment to fine tune it for your robot
         // and experiment to fine tune it for blue
-        leftFront  = hardwareMap.get(DcMotor.class, "leftFront");
-        rightBack = hardwareMap.get(DcMotor.class, "rightBack");
-        leftBack  = hardwareMap.get(DcMotor.class, "leftBack");
-        rightFront = hardwareMap.get(DcMotor.class, "rightFront");
+
+        arm = hardwareMap.get(DcMotorEx.class,"arm"); // not yet on bot - may throw errors
 
         // values are for blue
         // not consistent at all.
@@ -74,7 +70,6 @@ public class Right_Far_Auto extends OpMode {
         Scalar lower = new Scalar(150, 100, 100);
         Scalar upper = new Scalar(180, 255, 255);
         double minArea = 200; // the minimum area for the detection to consider for your prop
-
         drive = new SampleMecanumDrive(hardwareMap);
         controller = new PIDController(p,i,d);
         atagProcessor = new AprilTagProcessor.Builder().build();
@@ -115,6 +110,7 @@ public class Right_Far_Auto extends OpMode {
         visionPortal = new VisionPortal.Builder()
                 .setCamera(hardwareMap.get(WebcamName.class, "logi")) // the camera on your robot is named "Webcam 1" by default
                 .addProcessors(atagProcessor,propProcessor)
+                .setCameraResolution(new Size(640, 480))
                 .build();
 
         // you may also want to take a look at some of the examples for instructions on
@@ -127,10 +123,8 @@ public class Right_Far_Auto extends OpMode {
     @Override
     public void init_loop() {
         telemetry.addData("Currently Recorded Position", propProcessor.getRecordedPropPosition());
-        //telemetry.addData("Camera State", visionPortal.getCameraState());
         telemetry.addData("Currently Detected Mass Center", "x: " + propProcessor.getLargestContourX() + ", y: " + propProcessor.getLargestContourY());
-        //telemetry.addData("Currently Detected Mass Area", propProcessor.getLargestContourArea());
-        telemetryAprilTag();
+        //telemetryAprilTag();
 
     }
 
@@ -151,52 +145,47 @@ public class Right_Far_Auto extends OpMode {
             recordedPropPosition = MIDDLE;
         }
 
-
-        Pose2d startPose = new Pose2d(-63.57, -35.82, Math.toRadians(0.00));
-
+        //right of the mat
+        Pose2d startPose = new Pose2d(14.5, -63.75, Math.toRadians(90.00));
         switch (recordedPropPosition) {
             case LEFT:
-                //meep meep tested
+
                 drive.setPoseEstimate(startPose);
 
-                TrajectorySequence left = drive.trajectorySequenceBuilder(startPose)
-                        .splineTo(new Vector2d(-35.47, -25.81), Math.toRadians(90.00))
-                        .splineTo(new Vector2d(-35.65, 49.00), Math.toRadians(90.00))
+                TrajectorySequence left =  drive.trajectorySequenceBuilder(startPose)
+                        .splineTo(new Vector2d(5.85,-40.04), Math.toRadians(125.00))
+                        .setReversed(true)
+                        .splineTo(new Vector2d(49.53,-29.22),Math.toRadians(0))
+                        .lineTo(new Vector2d(-60, -36))
                         .build();
-
                 drive.followTrajectorySequence(left);
                 break;
 
-            case UNFOUND:
-
-                break;
-
             case MIDDLE:
-                // targetTag = 586;
 
                 drive.setPoseEstimate(startPose);
-                //meep meep tested
-                TrajectorySequence middle = drive.trajectorySequenceBuilder(startPose)
-                        .splineTo(new Vector2d(-31.08, -36.18), Math.toRadians(0.00))
-                        .splineTo(new Vector2d(-36.53, 8.96), Math.toRadians(90.00))
-                        .splineTo(new Vector2d(-36.00, 47.94), Math.toRadians(89.31))
+
+               TrajectorySequence traj = drive.trajectorySequenceBuilder(startPose)
+                        .splineTo(new Vector2d(14.50, -32), Math.toRadians(90.00))
+                        .setReversed(true)
+                        .splineTo(new Vector2d(50.54, -37.23), Math.toRadians(0.00))
+                        .lineTo(new Vector2d(-60,-36))
                         .build();
 
 
-                drive.followTrajectorySequence(middle);
+                drive.followTrajectorySequence(traj);
 
                 break;
 
             case RIGHT:
 
-
                 drive.setPoseEstimate(startPose);
-                // meep meep tested
+
                 TrajectorySequence right = drive.trajectorySequenceBuilder(startPose)
-                        .splineTo(new Vector2d(-37.05, -47.24), Math.toRadians(0.00))
-                        .splineTo(new Vector2d(-36.53, -22.83), Math.toRadians(90.00))
-                        .splineTo(new Vector2d(-36.53, 8.96), Math.toRadians(90.00))
-                        .splineTo(new Vector2d(-36.00, 47.94), Math.toRadians(89.31))
+                        .splineTo(new Vector2d(23.65, -41.27), Math.toRadians(90))
+                        .setReversed(true)
+                        .splineTo(new Vector2d(50.63,-43.73),Math.toRadians(0))
+                        .lineTo(new Vector2d(-60,-36))
                         .build();
 
                 drive.followTrajectorySequence(right);
@@ -207,7 +196,8 @@ public class Right_Far_Auto extends OpMode {
 
     @Override
     public void loop() {
-        // telemetryAprilTag();
+        telemetryAprilTag();
+        propProcessor.close();
 
 
         // for rr heading has some error - may be a problem.
@@ -250,27 +240,27 @@ public class Right_Far_Auto extends OpMode {
          * TODO
          *  tune pid gains for arm
          */
-        controller.setPID(p,i,d);
-        int armPos = arm.getCurrentPosition();
-        double pid = controller.calculate(armPos,target);
-        double ff = Math.cos(Math.toRadians(target / tick_in_degrees)) * f;
 
-        double power = pid + ff;
-
-        arm.setPower(power);
+//        controller.setPID(p,i,d);
+//        int armPos = arm.getCurrentPosition();
+//        double pid = controller.calculate(armPos,target);
+//        double ff = Math.cos(Math.toRadians(target / tick_in_degrees)) * f;
+//
+//        double power = pid + ff;
+//        arm.setPower(power);
 
     }
 
     @Override
     public void stop() {
         //shuts down camera
-        if (visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING) {
-            visionPortal.stopLiveView();
-            visionPortal.stopStreaming();
-        }
-        // this closes down the portal when we stop the code
-        propProcessor.close();
-        visionPortal.close();
+//        if (visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING) {
+//            visionPortal.stopLiveView();
+//            visionPortal.stopStreaming();
+//        }
+//        // this closes down the portal when we stop the code
+//        propProcessor.close();
+//        visionPortal.close();
     }
     private void telemetryAprilTag() {
 

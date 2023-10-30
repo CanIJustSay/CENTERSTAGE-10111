@@ -119,8 +119,11 @@ public class Drive extends OpMode{
 
         intake = hardwareMap.get(DcMotor.class, "intake");
 
-        leftFront.setDirection(DcMotor.Direction.REVERSE);
-        rightFront.setDirection(DcMotor.Direction.REVERSE);
+//        leftFront.setDirection(DcMotor.Direction.REVERSE);
+//        rightFront.setDirection(DcMotor.Direction.REVERSE);
+
+          leftFront.setDirection(DcMotor.Direction.REVERSE);
+          leftBack.setDirection(DcMotor.Direction.REVERSE);
     }
     @Override
     public void init_loop(){
@@ -163,19 +166,26 @@ public class Drive extends OpMode{
         }
 
         /**
-         *fL = y+x+r
+         * fL = y+x+r
          * rL = y-x+r
          * fR = y-x-r
          * rR = y+x-r
          */
         
             // Set the motor powers
-            leftFront.setPower((leftStickX + leftStickY + rightStickX) / (rightBumper ? 3 : 1));
-            leftBack.setPower((leftStickX - leftStickY - rightStickX) / (rightBumper ? 3 : 1));
-            rightFront.setPower((leftStickX - leftStickY + rightStickX) / (rightBumper ? 3 : 1));
-            rightBack.setPower((leftStickX + leftStickY - rightStickX) / (rightBumper ? 3 : 1));
+//            leftFront.setPower((leftStickX + leftStickY + rightStickX) / (rightBumper ? 3 : 1));
+//            leftBack.setPower((leftStickX - leftStickY - rightStickX) / (rightBumper ? 3 : 1));
+//            rightFront.setPower((leftStickX - leftStickY + rightStickX) / (rightBumper ? 3 : 1));
+//            rightBack.setPower((leftStickX + leftStickY - rightStickX) / (rightBumper ? 3 : 1));
 
-            lift.setPower(gamepad2.left_stick_y * 5);
+            leftFront.setPower((leftStickY + leftStickX + rightStickX) / (rightBumper ? 3 : 1));
+              leftBack.setPower((leftStickY - leftStickX + rightStickX) / (rightBumper ? 3 : 1));
+            rightFront.setPower((leftStickY - leftStickX - rightStickX) / (rightBumper ? 3 : 1));
+            rightBack.setPower((leftStickY + leftStickX - rightStickX) / (rightBumper ? 3 : 1));
+
+
+            lift.setPower(gamepad2.left_stick_y);
+
             if(gamepad1.left_bumper){ enterCorrective = true; }
 
             //scissor lift.

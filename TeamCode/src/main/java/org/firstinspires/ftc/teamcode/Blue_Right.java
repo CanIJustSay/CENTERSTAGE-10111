@@ -6,10 +6,8 @@ import static org.firstinspires.ftc.teamcode.CameraCode.PropDetectionPipeline.Pr
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
-import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -26,7 +24,7 @@ import org.opencv.core.Scalar;
 import java.util.List;
 
 @Autonomous(preselectTeleOp = "Drive")
-public class Left_Far_Auto extends OpMode {
+public class Blue_Right extends OpMode {
     private VisionPortal visionPortal;
     private PropDetectionPipeline propProcessor;
     private SampleMecanumDrive drive;
@@ -37,10 +35,6 @@ public class Left_Far_Auto extends OpMode {
     public static double f = 0;
     public static int target = 0;    //target position for the arm
     public static double tick_in_degrees = 537.6 / 360;
-    private DcMotor leftFront;
-    private DcMotor rightFront;
-    private DcMotor leftBack;
-    private DcMotor rightBack;
     private DcMotor intake;
     private DcMotorEx arm;
 
@@ -58,23 +52,22 @@ public class Left_Far_Auto extends OpMode {
         // the domains are: ([0, 180], [0, 255], [0, 255])
         // this is tuned to detect red, so you will need to experiment to fine tune it for your robot
         // and experiment to fine tune it for blue
-        leftFront  = hardwareMap.get(DcMotor.class, "leftFront");
-        rightBack = hardwareMap.get(DcMotor.class, "rightBack");
-        leftBack  = hardwareMap.get(DcMotor.class, "leftBack");
-        rightFront = hardwareMap.get(DcMotor.class, "rightFront");
+
         // values are for blue
         // not consistent at all.
-           //Scalar lower = new Scalar(97,100,100);
-           //Scalar upper = new Scalar(125,255,255);
+        Scalar lower = new Scalar(97,100,100);
+        Scalar upper = new Scalar(125,255,255);
 
         // values are for red
         // very consistent
-        Scalar lower = new Scalar(150, 100, 100);
-        Scalar upper = new Scalar(180, 255, 255);
+        //Scalar lower = new Scalar(150, 100, 100);
+        //Scalar upper = new Scalar(180, 255, 255);
         double minArea = 200; // the minimum area for the detection to consider for your prop
         drive = new SampleMecanumDrive(hardwareMap);
         controller = new PIDController(p,i,d);
         atagProcessor = new AprilTagProcessor.Builder().build();
+
+        arm = hardwareMap.get(DcMotorEx.class,"arm");
 
 
         //to change what qualifies as middle, change the left and right dividing lines
@@ -149,8 +142,8 @@ public class Left_Far_Auto extends OpMode {
             recordedPropPosition = MIDDLE;
         }
 
-        //CENTER OF THE MAT
-        Pose2d startPose = new Pose2d(-33.89, -63.75, Math.toRadians(90.00));
+        //right of mat
+        Pose2d startPose = new Pose2d(-33.89, 63.75, Math.toRadians(270.00));
 
         switch (recordedPropPosition) {
             case LEFT:
@@ -158,27 +151,31 @@ public class Left_Far_Auto extends OpMode {
                 drive.setPoseEstimate(startPose);
 
                 TrajectorySequence left =  drive.trajectorySequenceBuilder(startPose)
-                        .splineTo(new Vector2d(-47.77, -39.16), Math.toRadians(90.00))
+                        .splineTo(new Vector2d(-28.89, 38.0), Math.toRadians(-45))
                         .setReversed(true)
-                        .splineTo(new Vector2d(-13, -58.9), Math.toRadians(0))
-
-                        .splineTo(new Vector2d(0.93, -58.9), Math.toRadians(0.00))
-                        .splineTo(new Vector2d(47,-28),Math.toRadians(0))
+                        .splineTo( new Vector2d(-27.0, 58.5), Math.toRadians(0.0))
+                        .back(62)
+                        .lineTo(new Vector2d(48,34))
+                      //  .lineTo(new Vector2d(0,36))
                         .build();
 
                 drive.followTrajectorySequence(left);
+
                 break;
 
             case MIDDLE:
-               // targetTag = 586;
 
                 drive.setPoseEstimate(startPose);
 
                 TrajectorySequence middle = drive.trajectorySequenceBuilder(startPose)
-                        .splineTo(new Vector2d(-33.72, -31.26), Math.toRadians(90.00))
+                        .lineTo(new Vector2d(-33.89, 32.0))
                         .setReversed(true)
-                        .splineTo(new Vector2d(-10.6,-35.1),Math.toRadians(0))
-                        .splineTo(new Vector2d(50.58, -36.70), Math.toRadians(0.00))
+                        .back(20)
+                        .splineTo( new Vector2d(-21.0, 58.5), Math.toRadians(0.0))
+                        .back(60)
+                        .lineTo(new Vector2d(48,34))
+                       // .lineTo(new Vector2d(0,36))
+
                         .build();
 
                 drive.followTrajectorySequence(middle);
@@ -190,15 +187,14 @@ public class Left_Far_Auto extends OpMode {
 
                 drive.setPoseEstimate(startPose);
 
-                TrajectorySequence right =  drive.trajectorySequenceBuilder(new Pose2d(-33.89, -63.75, Math.toRadians(90.00)))
-                        .splineTo(new Vector2d(-30.73, -38.99), Math.toRadians(45.00))
+                TrajectorySequence right = drive.trajectorySequenceBuilder(startPose)
+                        .splineTo(new Vector2d(-42.5, 42.0), Math.toRadians(225.0))
                         .setReversed(true)
-                        .splineTo(new Vector2d(-27, -59), Math.toRadians(0.00))
-                        .splineTo(new Vector2d(13.17, -59), Math.toRadians(0.00))
-                        .splineTo(new Vector2d(46.54, -34.42), Math.toRadians(0.00))
+                        .splineTo( new Vector2d(-21.0, 58.5), Math.toRadians(0.0))
+                        .back(60)
+                        .lineTo(new Vector2d(48,34))
+                       // .lineTo(new Vector2d(0,36))
                         .build();
-
-
 
                 drive.followTrajectorySequence(right);
                 break;
@@ -208,7 +204,7 @@ public class Left_Far_Auto extends OpMode {
 
     @Override
     public void loop() {
-       // telemetryAprilTag();
+        // telemetryAprilTag();
 
 
         // for rr heading has some error - may be a problem.
@@ -219,33 +215,33 @@ public class Left_Far_Auto extends OpMode {
         // this works -
         // drives until "Y" is less than 50. use for rr maybe.
         /**
-        List<AprilTagDetection> allDets = atagProcessor.getDetections();
-        for (AprilTagDetection det : allDets) {
+         List<AprilTagDetection> allDets = atagProcessor.getDetections();
+         for (AprilTagDetection det : allDets) {
 
-            // targetTag isolated
-            if (det.id == targetTag) {
-                detX = det.ftcPose.x;
-                detY = det.ftcPose.y;
-
-
-                    if (detY > 50) {
-                        rightFront.setPower(0.1);
-                        rightBack.setPower(0.1);
-                        leftBack.setPower(0.1);
-                        leftFront.setPower(0.1);
-                    } else {
-
-                        rightFront.setPower(0);
-                        rightBack.setPower(0);
-                        leftBack.setPower(0);
-                        leftFront.setPower(0);
-                    }
+         // targetTag isolated
+         if (det.id == targetTag) {
+         detX = det.ftcPose.x;
+         detY = det.ftcPose.y;
 
 
+         if (detY > 50) {
+         rightFront.setPower(0.1);
+         rightBack.setPower(0.1);
+         leftBack.setPower(0.1);
+         leftFront.setPower(0.1);
+         } else {
 
-            }
-        }
-        */
+         rightFront.setPower(0);
+         rightBack.setPower(0);
+         leftBack.setPower(0);
+         leftFront.setPower(0);
+         }
+
+
+
+         }
+         }
+         */
 
         /*
          * TODO
@@ -264,14 +260,7 @@ public class Left_Far_Auto extends OpMode {
 
     @Override
     public void stop() {
-        //shuts down camera
-//        if (visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING) {
-//            visionPortal.stopLiveView();
-//            visionPortal.stopStreaming();
-//        }
-//        // this closes down the portal when we stop the code
-//        propProcessor.close();
-//        visionPortal.close();
+
     }
     private void telemetryAprilTag() {
 

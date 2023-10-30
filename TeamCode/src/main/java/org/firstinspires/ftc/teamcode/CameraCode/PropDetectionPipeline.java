@@ -106,21 +106,22 @@ public class PropDetectionPipeline implements VisionProcessor {
         // you dont need to call it
 
         //looks at a particular part of the mat - defined by a rectangle.
-        //Mat croppedFrame = frame.submat(sub);
+        Mat croppedFrame = frame.submat(sub);
+
         // this converts the frame from RGB to HSV, which is supposed to be better for doing colour blob detection
-        Imgproc.cvtColor(frame, frame, Imgproc.COLOR_RGB2HSV);
+        Imgproc.cvtColor(croppedFrame, croppedFrame, Imgproc.COLOR_RGB2HSV);
 
         // thats why you need to give your scalar upper and lower bounds as HSV values
 
         // this method makes the colour image black and white, with everything between your upper and lower bound values as white, and everything else black
-        Core.inRange(frame, lower, upper, frame);
+        Core.inRange(croppedFrame, lower, upper, croppedFrame);
 
         // this empties out the list of found contours, otherwise we would keep all the old ones, read on to find out more about contours!
         contours.clear();
 
         // this finds the contours, which are borders between black and white, and tries to simplify them to make nice outlines around potential objects
         // this basically helps us to find all the shapes/outlines of objects that exist within our colour range
-        Imgproc.findContours(frame, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(croppedFrame, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
 
         // this sets up our largest contour area to be -1
         largestContourArea = -1;
@@ -186,7 +187,7 @@ public class PropDetectionPipeline implements VisionProcessor {
 //		Imgproc.drawContours(frame, contours, -1, colour);
 
         // returns back the edited image, don't worry about this too much
-        return frame;
+        return croppedFrame;
     }
 
     @Override
