@@ -16,16 +16,26 @@ import javax.imageio.ImageIO;
 public class Meep {
     public static void main(String[] args) {
         MeepMeep meepMeep = new MeepMeep(800);
-        Pose2d startPose = new Pose2d(14.5, 63.75, Math.toRadians(270.00));
+        Pose2d startPose = new Pose2d(-33.89, 63.75, Math.toRadians(270.00));
 
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
                 .setConstraints(30, 30, Math.toRadians(180), Math.toRadians(180), 15)
                 .followTrajectorySequence(drive ->
 
                         drive.trajectorySequenceBuilder(startPose)
-                                .splineTo(new Vector2d(7.85,40.04), Math.toRadians(225.00))
+                                .splineTo(new Vector2d(-28.89, 38.0), Math.toRadians(-45))
                                 .setReversed(true)
-                                .splineTo(new Vector2d(49.53,29.22),Math.toRadians(0))
+                                .splineTo( new Vector2d(-27.0, 58.5), Math.toRadians(0.0))
+                                .back(62)
+                                .lineTo(new Vector2d(48,34))
+                                //  .lineTo(new Vector2d(0,36))
+                                .addTemporalMarker(()->{
+                                    //does something
+                                   // target = 100;
+                                   // wrist.setPosition(1);
+
+                                })
+                                .lineTo(new Vector2d(48,50))
                                 .build());
 
 

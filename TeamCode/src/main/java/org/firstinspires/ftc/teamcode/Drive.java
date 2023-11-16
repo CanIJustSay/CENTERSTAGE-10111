@@ -58,11 +58,11 @@ public class Drive extends OpMode{
     RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.FORWARD;
     RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.LEFT;
     RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
-
     private PIDController controller;
 
-    public static double p = 0, i = 0, d = 0;    //PID gains to be tuned
-    public static double f = 0;
+    public static double p = 0.056, i = 0, d = 0.001;    //PID gains to be tuned
+
+    public static double f = 0.01;
     public static int target = 0;    //target position for the arm
     public static double tick_in_degrees = 537.6 / 360;
     private DcMotorEx arm; // not yet on the bot - we will use PIDF gains for this maybe???
@@ -71,6 +71,8 @@ public class Drive extends OpMode{
     private DcMotorEx leftBack;
     private DcMotorEx rightBack;
     private DcMotor intake;
+
+    private Servo wrist;
     private boolean enterCorrective;
 
     private VisionPortal camera;
@@ -82,6 +84,7 @@ public class Drive extends OpMode{
     private int targetId = 586;
 
     private double detYaw;
+    private boolean manual;
     private CRServo servo;
     private double detX;
     private double detY;
@@ -94,11 +97,13 @@ public class Drive extends OpMode{
         telemetry.update();
 
 
-        imu = hardwareMap.get(IMU.class,"imu");
+//        imu = hardwareMap.get(IMU.class,"imu");
 
         lift = hardwareMap.get(DcMotor.class,"lift");
 
         servo = hardwareMap.get(CRServo.class,"servo");
+
+        controller = new PIDController(p,i,d);
 
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
@@ -109,21 +114,21 @@ public class Drive extends OpMode{
 
         arm = hardwareMap.get(DcMotorEx.class,"arm");
 
-        atagProcessor = new AprilTagProcessor.Builder().build();
+//        atagProcessor = new AprilTagProcessor.Builder().build();
 
-        camera = new VisionPortal.Builder()
-                .setCamera(hardwareMap.get(WebcamName.class,"logi"))
-                .addProcessor(atagProcessor)
-                .build();
+        wrist = hardwareMap.get(Servo.class,"wrist");
 
+//        camera = new VisionPortal.Builder()
+//                .setCamera(hardwareMap.get(WebcamName.class,"logi"))
+//                .addProcessor(atagProcessor)
+//                .build();
 
         intake = hardwareMap.get(DcMotor.class, "intake");
 
-//        leftFront.setDirection(DcMotor.Direction.REVERSE);
-//        rightFront.setDirection(DcMotor.Direction.REVERSE);
+        leftFront.setDirection(DcMotor.Direction.REVERSE);
+        leftBack.setDirection(DcMotor.Direction.REVERSE);
 
-          leftFront.setDirection(DcMotor.Direction.REVERSE);
-          leftBack.setDirection(DcMotor.Direction.REVERSE);
+        manual = false;
     }
     @Override
     public void init_loop(){
@@ -140,6 +145,11 @@ public class Drive extends OpMode{
 
         lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        arm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        arm.setDirection(DcMotorSimple.Direction.REVERSE);
+
     }
     @Override
     public void loop(){
@@ -150,12 +160,6 @@ public class Drive extends OpMode{
         float leftStickX = gamepad1.left_stick_x;
         float rightStickX = gamepad1.right_stick_x;
         boolean rightBumper = gamepad1.right_bumper;
-
-        // Cap the motor powers
-//        frontLeftPower = Range.clip(frontLeftPower, -1, 1);
-//        backLeftPower = Range.clip(backLeftPower, -1, 1);
-//        frontRightPower = Range.clip(frontRightPower, -1, 1);
-//        backRightPower = Range.clip(backRightPower, -1, 1);
 
         if(gamepad2.left_bumper){
             intake.setPower(1);
@@ -171,106 +175,93 @@ public class Drive extends OpMode{
          * fR = y-x-r
          * rR = y+x-r
          */
-        
-            // Set the motor powers
-//            leftFront.setPower((leftStickX + leftStickY + rightStickX) / (rightBumper ? 3 : 1));
-//            leftBack.setPower((leftStickX - leftStickY - rightStickX) / (rightBumper ? 3 : 1));
-//            rightFront.setPower((leftStickX - leftStickY + rightStickX) / (rightBumper ? 3 : 1));
-//            rightBack.setPower((leftStickX + leftStickY - rightStickX) / (rightBumper ? 3 : 1));
+        if(gamepad1.left_bumper) {
+            leftFront.setPower(0);
+            leftBack.setPower(0);
+            rightFront.setPower(0);
+            rightBack.setPower(0);
+        } else {
+            leftFront.setPower((leftStickY + leftStickX + rightStickX) / (rightBumper ? 3 : 1) );
+            leftBack.setPower((leftStickY - leftStickX + rightStickX) / (rightBumper ? 3 : 1) );
+            rightFront.setPower((leftStickY - leftStickX - rightStickX) / (rightBumper ? 3 : 1) );
+            rightBack.setPower((leftStickY + leftStickX - rightStickX) / (rightBumper ? 3 : 1) );
+        }
 
-            leftFront.setPower((leftStickY + leftStickX + rightStickX) / (rightBumper ? 3 : 1));
-              leftBack.setPower((leftStickY - leftStickX + rightStickX) / (rightBumper ? 3 : 1));
-            rightFront.setPower((leftStickY - leftStickX - rightStickX) / (rightBumper ? 3 : 1));
-            rightBack.setPower((leftStickY + leftStickX - rightStickX) / (rightBumper ? 3 : 1));
 
 
-            lift.setPower(gamepad2.left_stick_y);
+        lift.setPower(gamepad2.right_stick_y);
 
-            if(gamepad1.left_bumper){ enterCorrective = true; }
+        //scissor lift
+        if(gamepad2.a){
+            servo.setPower(-1);
+        } else if(gamepad2.b){
+            servo.setPower(1);
+        } else {
+            servo.setPower(0);
+        }
 
-            //scissor lift.
-            if(gamepad2.a){
-                servo.setPower(-1);
-            } else if(gamepad2.b){
-                servo.setPower(1);
-            } else {
-                servo.setPower(0);
-            }
+        //arm pid
+        controller.setPID(p,i,d);
 
-            /*
-            if(enterCorrective){
-                for(AprilTagDetection dets : currentDetections){
-                    //redAlliance Left
-                    if(dets.id == 4) {
-                        if(dets.ftcPose.y < 28){
-                            leftFront.setPower(-0.1);
-                            leftBack.setPower(-0.1);
-                            rightFront.setPower(-0.1);
-                            rightBack.setPower(-0.1);
-                        } else if(dets.ftcPose.y > 28){
-                            leftFront.setPower(0.1);
-                            leftBack.setPower(0.1);
-                            rightFront.setPower(0.1);
-                            rightBack.setPower(0.1);
-                        } else {
-                            leftFront.setPower(0);
-                            leftBack.setPower(0);
-                            rightFront.setPower(0);
-                            rightBack.setPower(0);
-                        }
+        int armPos = arm.getCurrentPosition();
+        double pid = controller.calculate(armPos,target);
+        double ff = Math.cos(Math.toRadians(target / tick_in_degrees)) * f;
 
-                    }
-                }
-            }
-*/
+        //wrist positioning
+        wrist.setPosition(0);
 
-          //  controller.setPID(p,i,d);
+        if(gamepad1.a){
+            wrist.setPosition(1);
+        }
 
-//        int armPos = arm.getCurrentPosition();
-//        double pid = controller.calculate(armPos,target);
-//        double ff = Math.cos(Math.toRadians(target / tick_in_degrees)) * f;
-//
-//        target += (gamepad2.left_stick_y * 5);
-//
-//        double power;
-//
-//        if(arm.getCurrentPosition() > 3500){
-//            power = 0;
-//        } else {
-//            power = pid + ff;
-//        }
-//
-//        arm.setPower(power);
+        // target += (gamepad2.left_stick_y * 5);
+
+        double power;
+
+        power = pid + ff;
 
         arm.setPower(-gamepad2.left_stick_y);
 
-
-
-
-
-        telemetryAprilTag();
-
-        telemetry.addData("Hub orientation", "Logo=%s   USB=%s\n ", logoDirection, usbDirection);
-
-        // Check to see if heading reset is requested
-        if (gamepad1.y) {
-            telemetry.addData("Yaw", "Resetting\n");
-            imu.resetYaw();
-        } else {
-            telemetry.addData("Yaw", "Press Y (triangle) on Gamepad to reset\n");
+        /**
+        if(gamepad2.x && !manual){
+            manual = true;
+        } else if(gamepad2.x && manual){
+            manual = false;
         }
+*/
 
-        // Retrieve Rotational Angles and Velocities
-        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-        AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
-
-        telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
-        telemetry.addData("Pitch (X)", "%.2f Deg.", orientation.getPitch(AngleUnit.DEGREES));
-        telemetry.addData("Roll (Y)", "%.2f Deg.\n", orientation.getRoll(AngleUnit.DEGREES));
-        telemetry.addData("Yaw (Z) velocity", "%.2f Deg/Sec", angularVelocity.zRotationRate);
-        telemetry.addData("Pitch (X) velocity", "%.2f Deg/Sec", angularVelocity.xRotationRate);
-        telemetry.addData("Roll (Y) velocity", "%.2f Deg/Sec", angularVelocity.yRotationRate);
-        telemetry.update();
+//
+//        telemetry.addData("Current Pos", arm.getCurrentPosition());
+//        telemetry.addData("Arm Pos",armPos);
+//        telemetry.addData("Target", target);
+//
+//
+//
+//
+//
+//        telemetryAprilTag();
+//
+//        telemetry.addData("Hub orientation", "Logo=%s   USB=%s\n ", logoDirection, usbDirection);
+//
+//        // Check to see if heading reset is requested
+//        if (gamepad1.y) {
+//            telemetry.addData("Yaw", "Resetting\n");
+//            imu.resetYaw();
+//        } else {
+//            telemetry.addData("Yaw", "Press Y (triangle) on Gamepad to reset\n");
+//        }
+//
+//        // Retrieve Rotational Angles and Velocities
+//        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+//        AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
+//
+//        telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
+//        telemetry.addData("Pitch (X)", "%.2f Deg.", orientation.getPitch(AngleUnit.DEGREES));
+//        telemetry.addData("Roll (Y)", "%.2f Deg.\n", orientation.getRoll(AngleUnit.DEGREES));
+//        telemetry.addData("Yaw (Z) velocity", "%.2f Deg/Sec", angularVelocity.zRotationRate);
+//        telemetry.addData("Pitch (X) velocity", "%.2f Deg/Sec", angularVelocity.xRotationRate);
+//        telemetry.addData("Roll (Y) velocity", "%.2f Deg/Sec", angularVelocity.yRotationRate);
+//        telemetry.update();
 
         telemetry.addData("Status", "Run Time: " + runtime.toString());
         telemetry.update();
@@ -282,10 +273,10 @@ public class Drive extends OpMode{
         rightFront.setPower(0);
         rightBack.setPower(0);
 
-        if(camera.getCameraState() == VisionPortal.CameraState.STREAMING){
-            camera.stopLiveView();
-            camera.stopStreaming();
-        }
+//        if(camera.getCameraState() == VisionPortal.CameraState.STREAMING){
+//            camera.stopLiveView();
+//            camera.stopStreaming();
+//        }
     }
     private void telemetryAprilTag() {
 

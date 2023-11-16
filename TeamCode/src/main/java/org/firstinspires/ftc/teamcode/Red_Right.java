@@ -15,6 +15,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.CameraCode.PropDetectionPipeline;
@@ -36,13 +37,14 @@ public class Red_Right extends OpMode {
     private AprilTagProcessor atagProcessor;
     private PIDController controller;
 
-    public static double p = 0, i = 0, d = 0;    //PID gains to be tuned
-    public static double f = 0;
+    public static double p = 0.056, i = 0, d = 0.001;    //PID gains to be tuned
+
+    public static double f = 0.01;
     public static int target = 0;    //target position for the arm
     public static double tick_in_degrees = 537.6 / 360;
     private DcMotor intake;
     private DcMotorEx arm;
-
+    private Servo wrist;
     private int targetTag; // what tag should we align with on the backboard - the ID
     private double detX;  // detected X values of the wanted tag
     private double detY; // detected Y values of the wanted tag
@@ -58,17 +60,14 @@ public class Red_Right extends OpMode {
         // this is tuned to detect red, so you will need to experiment to fine tune it for your robot
         // and experiment to fine tune it for blue
 
-        arm = hardwareMap.get(DcMotorEx.class,"arm"); // not yet on bot - may throw errors
+        arm = hardwareMap.get(DcMotorEx.class,"arm");
 
-        // values are for blue
-        // not consistent at all.
-        //Scalar lower = new Scalar(97,100,100);
-        //Scalar upper = new Scalar(125,255,255);
+        wrist = hardwareMap.get(Servo.class,"wrist");
 
-        // values are for red
-        // very consistent
-        Scalar lower = new Scalar(150, 100, 100);
+
+        Scalar lower = new Scalar(0, 100, 100);
         Scalar upper = new Scalar(180, 255, 255);
+
         double minArea = 200; // the minimum area for the detection to consider for your prop
         drive = new SampleMecanumDrive(hardwareMap);
         controller = new PIDController(p,i,d);
@@ -156,7 +155,12 @@ public class Red_Right extends OpMode {
                         .splineTo(new Vector2d(5.85,-40.04), Math.toRadians(125.00))
                         .setReversed(true)
                         .splineTo(new Vector2d(49.53,-29.22),Math.toRadians(0))
-                        .lineTo(new Vector2d(-60, -36))
+                        .addTemporalMarker(()->{
+                            //does something
+                            target = 100;
+                            wrist.setPosition(1);
+
+                        })
                         .build();
                 drive.followTrajectorySequence(left);
                 break;
@@ -165,11 +169,16 @@ public class Red_Right extends OpMode {
 
                 drive.setPoseEstimate(startPose);
 
-               TrajectorySequence traj = drive.trajectorySequenceBuilder(startPose)
+                TrajectorySequence traj = drive.trajectorySequenceBuilder(startPose)
                         .splineTo(new Vector2d(14.50, -32), Math.toRadians(90.00))
                         .setReversed(true)
                         .splineTo(new Vector2d(50.54, -37.23), Math.toRadians(0.00))
-                        .lineTo(new Vector2d(-60,-36))
+                        .addTemporalMarker(()->{
+                            //does something
+                            target = 100;
+                            wrist.setPosition(1);
+
+                        })
                         .build();
 
 
@@ -185,7 +194,12 @@ public class Red_Right extends OpMode {
                         .splineTo(new Vector2d(23.65, -41.27), Math.toRadians(90))
                         .setReversed(true)
                         .splineTo(new Vector2d(50.63,-43.73),Math.toRadians(0))
-                        .lineTo(new Vector2d(-60,-36))
+                        .addTemporalMarker(()->{
+                            //does something
+                            target = 100;
+                            wrist.setPosition(1);
+
+                        })
                         .build();
 
                 drive.followTrajectorySequence(right);
@@ -196,7 +210,7 @@ public class Red_Right extends OpMode {
 
     @Override
     public void loop() {
-        telemetryAprilTag();
+       // telemetryAprilTag();
         propProcessor.close();
 
 
@@ -207,47 +221,19 @@ public class Red_Right extends OpMode {
 
         // this works -
         // drives until "Y" is less than 50. use for rr maybe.
-        /**
-         List<AprilTagDetection> allDets = atagProcessor.getDetections();
-         for (AprilTagDetection det : allDets) {
-
-         // targetTag isolated
-         if (det.id == targetTag) {
-         detX = det.ftcPose.x;
-         detY = det.ftcPose.y;
-
-
-         if (detY > 50) {
-         rightFront.setPower(0.1);
-         rightBack.setPower(0.1);
-         leftBack.setPower(0.1);
-         leftFront.setPower(0.1);
-         } else {
-
-         rightFront.setPower(0);
-         rightBack.setPower(0);
-         leftBack.setPower(0);
-         leftFront.setPower(0);
-         }
-
-
-
-         }
-         }
-         */
 
         /*
          * TODO
          *  tune pid gains for arm
          */
 
-//        controller.setPID(p,i,d);
-//        int armPos = arm.getCurrentPosition();
-//        double pid = controller.calculate(armPos,target);
-//        double ff = Math.cos(Math.toRadians(target / tick_in_degrees)) * f;
-//
-//        double power = pid + ff;
-//        arm.setPower(power);
+        controller.setPID(p,i,d);
+        int armPos = arm.getCurrentPosition();
+        double pid = controller.calculate(armPos,target);
+        double ff = Math.cos(Math.toRadians(target / tick_in_degrees)) * f;
+
+        double power = pid + ff;
+        arm.setPower(power);
 
     }
 
