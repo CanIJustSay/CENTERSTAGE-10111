@@ -86,6 +86,8 @@ public class Drive extends OpMode{
     private double detYaw;
     private boolean manual;
     private CRServo servo;
+
+    private Servo knuckle;
     private double detX;
     private double detY;
 
@@ -118,6 +120,8 @@ public class Drive extends OpMode{
 
         wrist = hardwareMap.get(Servo.class,"wrist");
 
+        knuckle = hardwareMap.get(Servo.class,"knuckle");
+
 //        camera = new VisionPortal.Builder()
 //                .setCamera(hardwareMap.get(WebcamName.class,"logi"))
 //                .addProcessor(atagProcessor)
@@ -127,11 +131,13 @@ public class Drive extends OpMode{
 
         leftFront.setDirection(DcMotor.Direction.REVERSE);
         leftBack.setDirection(DcMotor.Direction.REVERSE);
+        wrist.setDirection(Servo.Direction.REVERSE);
 
         manual = false;
     }
     @Override
     public void init_loop(){
+
 
     }
     @Override
@@ -151,19 +157,35 @@ public class Drive extends OpMode{
         arm.setDirection(DcMotorSimple.Direction.REVERSE);
 
     }
+
+    /***
+     *
+     *
+
+     * Intake = done
+     * Lift   = done
+     * Knuckle = needs to be tested and tuned
+     * Arm     = could be improved, but done
+     * Wrist   = needs to be tested and tuned
+     * Drive   = done
+     * Lift Servo = needs to be tested
+     *
+     */
+
     @Override
     public void loop(){
-        List<AprilTagDetection> currentDetections = atagProcessor.getDetections();
 
-        // Get the joystick values
+
         float leftStickY = -gamepad1.left_stick_y;
         float leftStickX = gamepad1.left_stick_x;
         float rightStickX = gamepad1.right_stick_x;
         boolean rightBumper = gamepad1.right_bumper;
 
-        if(gamepad2.left_bumper){
+
+
+        if(gamepad1.left_trigger > 0){
             intake.setPower(1);
-        } else if(gamepad2.right_bumper) {
+        } else if(gamepad1.right_trigger > 0) {
             intake.setPower(-1);
         } else {
             intake.setPower(0);
@@ -175,6 +197,8 @@ public class Drive extends OpMode{
          * fR = y-x-r
          * rR = y+x-r
          */
+
+        //drive
         if(gamepad1.left_bumper) {
             leftFront.setPower(0);
             leftBack.setPower(0);
@@ -188,18 +212,30 @@ public class Drive extends OpMode{
         }
 
 
-
         lift.setPower(gamepad2.right_stick_y);
 
         //scissor lift
-        if(gamepad2.a){
-            servo.setPower(-1);
-        } else if(gamepad2.b){
+        if(gamepad1.a){
             servo.setPower(1);
-        } else {
+        } else if (gamepad1.b) {
             servo.setPower(0);
         }
 
+        knuckle.setPosition( gamepad2.dpad_up ? 0.0 : (gamepad2.dpad_right ? 0.23 : 0.3 ) );
+        //wrist positioning
+        if(gamepad2.a){
+            wrist.setPosition(0);
+        } else {
+            wrist.setPosition(0.57);
+        }
+
+        //needs to stay level until told otherwise, as it goes up, the angle should change
+        //consistenly with the wrist
+
+
+
+
+        // target += (gamepad2.left_stick_y * 5);
         //arm pid
         controller.setPID(p,i,d);
 
@@ -207,20 +243,12 @@ public class Drive extends OpMode{
         double pid = controller.calculate(armPos,target);
         double ff = Math.cos(Math.toRadians(target / tick_in_degrees)) * f;
 
-        //wrist positioning
-        wrist.setPosition(0);
-
-        if(gamepad1.a){
-            wrist.setPosition(1);
-        }
-
-        // target += (gamepad2.left_stick_y * 5);
-
         double power;
 
         power = pid + ff;
 
         arm.setPower(-gamepad2.left_stick_y);
+
 
         /**
         if(gamepad2.x && !manual){
@@ -263,6 +291,8 @@ public class Drive extends OpMode{
 //        telemetry.addData("Roll (Y) velocity", "%.2f Deg/Sec", angularVelocity.yRotationRate);
 //        telemetry.update();
 
+        telemetry.addData("Servo Pos",wrist.getPosition());
+
         telemetry.addData("Status", "Run Time: " + runtime.toString());
         telemetry.update();
     }
@@ -278,30 +308,7 @@ public class Drive extends OpMode{
 //            camera.stopStreaming();
 //        }
     }
-    private void telemetryAprilTag() {
 
-        List<AprilTagDetection> currentDetections = atagProcessor.getDetections();
-        telemetry.addData("# AprilTags Detected", currentDetections.size());
-
-        // Step through the list of detections and display info for each one.
-        for (AprilTagDetection detection : currentDetections) {
-            if (detection.metadata != null) {
-                telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
-                telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
-                telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
-                telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
-            } else {
-                telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
-                telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
-            }
-        }   // end for() loop
-
-        // Add "key" information to telemetry
-        telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
-        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
-        telemetry.addLine("RBE = Range, Bearing & Elevation");
-
-    }
 
 
 

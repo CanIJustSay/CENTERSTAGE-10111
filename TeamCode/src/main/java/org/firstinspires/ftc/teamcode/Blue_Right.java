@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -112,6 +113,7 @@ public class Blue_Right extends OpMode {
         // or how to manually edit the exposure and gain, to account for different lighting conditions
         // these may be extra features for you to work on to ensure that your robot performs
         // consistently, even in different environments
+        arm.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     @Override
@@ -139,7 +141,7 @@ public class Blue_Right extends OpMode {
             // this is a guess. doubtful it'll be needed but you never know
             recordedPropPosition = MIDDLE;
         }
-
+        wrist.setPosition(1);
         //right of mat
         Pose2d startPose = new Pose2d(-33.89, 63.75, Math.toRadians(270.00));
 
@@ -157,8 +159,8 @@ public class Blue_Right extends OpMode {
                         //  .lineTo(new Vector2d(0,36))
                         .addTemporalMarker(()->{
                             //does something
-                            target = 100;
-                            wrist.setPosition(1);
+                            target = 200;
+                            wrist.setPosition(0);
 
                         })
                         .build();
@@ -181,8 +183,8 @@ public class Blue_Right extends OpMode {
                         // .lineTo(new Vector2d(0,36))
                         .addTemporalMarker(()->{
                             //does something
-                            target = 100;
-                            wrist.setPosition(1);
+                            target = 200;
+                            wrist.setPosition(0);
 
                         })
                         .build();
@@ -205,8 +207,8 @@ public class Blue_Right extends OpMode {
                         // .lineTo(new Vector2d(0,36))
                         .addTemporalMarker(()->{
                             //does something
-                            target = 100;
-                            wrist.setPosition(1);
+                            target = 200;
+                            wrist.setPosition(0);
 
                         })
                         .build();

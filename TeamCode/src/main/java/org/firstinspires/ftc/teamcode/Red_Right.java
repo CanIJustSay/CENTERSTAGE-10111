@@ -15,6 +15,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -117,6 +118,9 @@ public class Red_Right extends OpMode {
         // or how to manually edit the exposure and gain, to account for different lighting conditions
         // these may be extra features for you to work on to ensure that your robot performs
         // consistently, even in different environments
+        wrist.setDirection(Servo.Direction.REVERSE);
+
+        arm.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     @Override
@@ -143,7 +147,7 @@ public class Red_Right extends OpMode {
             // this is a guess. doubtful it'll be needed but you never know
             recordedPropPosition = MIDDLE;
         }
-
+        wrist.setPosition(0);
         //right of the mat
         Pose2d startPose = new Pose2d(14.5, -63.75, Math.toRadians(90.00));
         switch (recordedPropPosition) {
@@ -157,8 +161,8 @@ public class Red_Right extends OpMode {
                         .splineTo(new Vector2d(49.53,-29.22),Math.toRadians(0))
                         .addTemporalMarker(()->{
                             //does something
-                            target = 100;
-                            wrist.setPosition(1);
+                            target = 200;
+                            wrist.setPosition(0);
 
                         })
                         .build();
@@ -175,7 +179,7 @@ public class Red_Right extends OpMode {
                         .splineTo(new Vector2d(50.54, -37.23), Math.toRadians(0.00))
                         .addTemporalMarker(()->{
                             //does something
-                            target = 100;
+                            target = 200;
                             wrist.setPosition(1);
 
                         })
@@ -196,8 +200,8 @@ public class Red_Right extends OpMode {
                         .splineTo(new Vector2d(50.63,-43.73),Math.toRadians(0))
                         .addTemporalMarker(()->{
                             //does something
-                            target = 100;
-                            wrist.setPosition(1);
+                            target = 200;
+                            wrist.setPosition(0);
 
                         })
                         .build();
