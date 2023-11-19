@@ -46,7 +46,7 @@ public class Blue_Left extends OpMode {
     private DcMotor intake;
     private DcMotorEx arm;
     private Servo wrist;
-
+    private Servo knuckle;
     private int targetTag; // what tag should we align with on the backboard - the ID
     private double detX;  // detected X values of the wanted tag
     private double detY; // detected Y values of the wanted tag
@@ -66,7 +66,7 @@ public class Blue_Left extends OpMode {
 
         wrist = hardwareMap.get(Servo.class,"wrist");
 
-
+        knuckle = hardwareMap.get(Servo.class,"knuckle");
 
         Scalar lower = new Scalar(97,100,50);
         Scalar upper = new Scalar(125,255,255);
@@ -107,7 +107,7 @@ public class Blue_Left extends OpMode {
                 upper,
                 () -> minArea, // these are lambda methods, in case we want to change them while the match is running, for us to tune them or something
                 () -> 213, // the left dividing line, in this case the left third of the frame
-                () -> 426 // the left dividing line, in this case the right third of the frame
+                () -> 450 // the right dividing line, in this case the right third of the frame
         );
         visionPortal = new VisionPortal.Builder()
                 .setCamera(hardwareMap.get(WebcamName.class, "logi")) // the camera on your robot is named "Webcam 1" by default
@@ -147,7 +147,8 @@ public class Blue_Left extends OpMode {
             // this is a guess. doubtful it'll be needed but you never know
             recordedPropPosition = MIDDLE;
         }
-        wrist.setPosition(1);
+     //   wrist.setPosition(0.57);
+        knuckle.setPosition(0.35);
         //right side of mat
         Pose2d startPose = new Pose2d(14.5, 63.75, Math.toRadians(270.00));
         switch (recordedPropPosition) {
@@ -162,10 +163,10 @@ public class Blue_Left extends OpMode {
                         // .lineTo(new Vector2d(0,36))
                         .addTemporalMarker(()->{
                             //does something
-                            target = 200;
-                            wrist.setPosition(0);
+
 
                         })
+                       // .lineTo(new Vector2d(40.65,43.75))
                         .build();
                 drive.followTrajectorySequence(left);
                 break;
@@ -175,16 +176,17 @@ public class Blue_Left extends OpMode {
                 drive.setPoseEstimate(startPose);
 
                 TrajectorySequence traj = drive.trajectorySequenceBuilder(startPose)
-                        .splineTo(new Vector2d(14.50, 32), Math.toRadians(270.00))
+                        .splineTo(new Vector2d(16.0, 33), Math.toRadians(270.00))
                         .setReversed(true)
                         .splineTo(new Vector2d(50.54, 37.23), Math.toRadians(0.00))
                         // .lineTo(new Vector2d(0,36))
-                        .addTemporalMarker(()->{
+                        .UNSTABLE_addTemporalMarkerOffset(-1,()->{
+
                             //does something
-                            target = 200;
-                            wrist.setPosition(0);
+
 
                         })
+                       // .lineTo(new Vector2d(40.65,43.75))
                         .build();
 
 
@@ -197,15 +199,14 @@ public class Blue_Left extends OpMode {
                 drive.setPoseEstimate(startPose);
 
                 TrajectorySequence right = drive.trajectorySequenceBuilder(startPose)
-                        .splineTo(new Vector2d(7.85,40.04), Math.toRadians(225.00))
+                        .splineTo(new Vector2d(4.8,38.04), Math.toRadians(225.00))
                         .setReversed(true)
-                        .splineTo(new Vector2d(49.53,29.22),Math.toRadians(0))
-                        .addTemporalMarker(()->{
-                            //does something
-                            target = 200;
-                            wrist.setPosition(0);
 
+                        .addTemporalMarker(()->{
+                            //does somethin
                         })
+                        //.lineTo(new Vector2d(40.65,43.75))
+
                         .build();
 
                 drive.followTrajectorySequence(right);
@@ -231,14 +232,16 @@ public class Blue_Left extends OpMode {
          * TODO
          *  tune pid gains for arm
          */
-
         controller.setPID(p,i,d);
         int armPos = arm.getCurrentPosition();
         double pid = controller.calculate(armPos,target);
         double ff = Math.cos(Math.toRadians(target / tick_in_degrees)) * f;
 
         double power = pid + ff;
+
         arm.setPower(power);
+
+
 
     }
 

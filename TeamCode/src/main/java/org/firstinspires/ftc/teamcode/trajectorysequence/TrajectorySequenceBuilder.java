@@ -382,7 +382,7 @@ public class TrajectorySequenceBuilder {
         return this;
     }
 
-    public TrajectorySequenceBuilder addTemporalMarker(MarkerCallback callback) {
+    public TrajectorySequenceBuilder  addTemporalMarker(MarkerCallback callback) {
         return this.addTemporalMarker(currentDuration, callback);
     }
 

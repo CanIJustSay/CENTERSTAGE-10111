@@ -41,7 +41,7 @@ public class Blue_Right extends OpMode {
     private DcMotor intake;
     private DcMotorEx arm;
     private Servo wrist;
-
+    private Servo knuckle;
     private int targetTag; // what tag should we align with on the backboard - the ID
     private double detX;  // detected X values of the wanted tag
     private double detY; // detected Y values of the wanted tag
@@ -69,6 +69,8 @@ public class Blue_Right extends OpMode {
         arm = hardwareMap.get(DcMotorEx.class,"arm");
 
         wrist = hardwareMap.get(Servo.class,"wrist");
+
+        knuckle = hardwareMap.get(Servo.class,"knuckle");
 
 
         //to change what qualifies as middle, change the left and right dividing lines
@@ -141,7 +143,8 @@ public class Blue_Right extends OpMode {
             // this is a guess. doubtful it'll be needed but you never know
             recordedPropPosition = MIDDLE;
         }
-        wrist.setPosition(1);
+        wrist.setPosition(0.57);
+        knuckle.setPosition(0.35);
         //right of mat
         Pose2d startPose = new Pose2d(-33.89, 63.75, Math.toRadians(270.00));
 
@@ -154,13 +157,11 @@ public class Blue_Right extends OpMode {
                         .splineTo(new Vector2d(-28.89, 38.0), Math.toRadians(-45))
                         .setReversed(true)
                         .splineTo( new Vector2d(-27.0, 58.5), Math.toRadians(0.0))
-                        .back(62)
-                        .lineTo(new Vector2d(48,34))
+
                         //  .lineTo(new Vector2d(0,36))
                         .addTemporalMarker(()->{
                             //does something
-                            target = 200;
-                            wrist.setPosition(0);
+
 
                         })
                         .build();
@@ -178,13 +179,11 @@ public class Blue_Right extends OpMode {
                         .setReversed(true)
                         .back(20)
                         .splineTo( new Vector2d(-21.0, 58.5), Math.toRadians(0.0))
-                        .back(60)
-                        .lineTo(new Vector2d(48,34))
+
                         // .lineTo(new Vector2d(0,36))
                         .addTemporalMarker(()->{
                             //does something
-                            target = 200;
-                            wrist.setPosition(0);
+
 
                         })
                         .build();
@@ -202,13 +201,9 @@ public class Blue_Right extends OpMode {
                         .splineTo(new Vector2d(-42.5, 42.0), Math.toRadians(225.0))
                         .setReversed(true)
                         .splineTo( new Vector2d(-21.0, 58.5), Math.toRadians(0.0))
-                        .back(60)
-                        .lineTo(new Vector2d(48,34))
                         // .lineTo(new Vector2d(0,36))
                         .addTemporalMarker(()->{
                             //does something
-                            target = 200;
-                            wrist.setPosition(0);
 
                         })
                         .build();

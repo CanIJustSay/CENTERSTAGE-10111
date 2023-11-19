@@ -86,6 +86,7 @@ public class Drive extends OpMode{
     private double detYaw;
     private boolean manual;
     private CRServo servo;
+    private Servo launcher;
 
     private Servo knuckle;
     private double detX;
@@ -115,6 +116,8 @@ public class Drive extends OpMode{
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
 
         arm = hardwareMap.get(DcMotorEx.class,"arm");
+
+        launcher = hardwareMap.get(Servo.class,"launcher");
 
 //        atagProcessor = new AprilTagProcessor.Builder().build();
 
@@ -164,11 +167,15 @@ public class Drive extends OpMode{
 
      * Intake = done
      * Lift   = done
-     * Knuckle = needs to be tested and tuned
+     * Knuckle = done
      * Arm     = could be improved, but done
-     * Wrist   = needs to be tested and tuned
+     * Wrist   = done
      * Drive   = done
-     * Lift Servo = needs to be tested
+     * Lift Servo = done
+     * Launcher = done
+     *
+     * Auto:
+     *  I have no clue. Should work, but you know.
      *
      */
 
@@ -215,13 +222,13 @@ public class Drive extends OpMode{
         lift.setPower(gamepad2.right_stick_y);
 
         //scissor lift
-        if(gamepad1.a){
+        if (gamepad1.a){
             servo.setPower(1);
         } else if (gamepad1.b) {
             servo.setPower(0);
         }
 
-        knuckle.setPosition( gamepad2.dpad_up ? 0.0 : (gamepad2.dpad_right ? 0.23 : 0.3 ) );
+        knuckle.setPosition( gamepad2.dpad_up ? 0.8 : (gamepad2.dpad_left ? 0.5 : (gamepad2.dpad_right ? 0.26 : 0.35 ) ) );
         //wrist positioning
         if(gamepad2.a){
             wrist.setPosition(0);
@@ -232,7 +239,9 @@ public class Drive extends OpMode{
         //needs to stay level until told otherwise, as it goes up, the angle should change
         //consistenly with the wrist
 
-
+        if(gamepad1.y){
+            launcher.setPosition(0);
+        }
 
 
         // target += (gamepad2.left_stick_y * 5);
@@ -244,19 +253,22 @@ public class Drive extends OpMode{
         double ff = Math.cos(Math.toRadians(target / tick_in_degrees)) * f;
 
         double power;
-
+      //  target = 100;
         power = pid + ff;
 
-        arm.setPower(-gamepad2.left_stick_y);
+        arm.setPower(
+                -gamepad2.left_stick_y
+               // power
+        );
 
 
         /**
-        if(gamepad2.x && !manual){
-            manual = true;
-        } else if(gamepad2.x && manual){
-            manual = false;
-        }
-*/
+         if(gamepad2.x && !manual){
+         manual = true;
+         } else if(gamepad2.x && manual){
+         manual = false;
+         }
+         */
 
 //
 //        telemetry.addData("Current Pos", arm.getCurrentPosition());
@@ -291,7 +303,6 @@ public class Drive extends OpMode{
 //        telemetry.addData("Roll (Y) velocity", "%.2f Deg/Sec", angularVelocity.yRotationRate);
 //        telemetry.update();
 
-        telemetry.addData("Servo Pos",wrist.getPosition());
 
         telemetry.addData("Status", "Run Time: " + runtime.toString());
         telemetry.update();

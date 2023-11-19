@@ -46,6 +46,7 @@ public class Red_Right extends OpMode {
     private DcMotor intake;
     private DcMotorEx arm;
     private Servo wrist;
+    private Servo knuckle;
     private int targetTag; // what tag should we align with on the backboard - the ID
     private double detX;  // detected X values of the wanted tag
     private double detY; // detected Y values of the wanted tag
@@ -64,6 +65,8 @@ public class Red_Right extends OpMode {
         arm = hardwareMap.get(DcMotorEx.class,"arm");
 
         wrist = hardwareMap.get(Servo.class,"wrist");
+
+        knuckle = hardwareMap.get(Servo.class,"knuckle");
 
 
         Scalar lower = new Scalar(0, 100, 100);
@@ -118,7 +121,7 @@ public class Red_Right extends OpMode {
         // or how to manually edit the exposure and gain, to account for different lighting conditions
         // these may be extra features for you to work on to ensure that your robot performs
         // consistently, even in different environments
-        wrist.setDirection(Servo.Direction.REVERSE);
+
 
         arm.setDirection(DcMotorSimple.Direction.REVERSE);
     }
@@ -139,7 +142,6 @@ public class Red_Right extends OpMode {
               check up on rr - could start being dumb again, tuning wise
               widen left and right bounds because middle needs to be larger
 
-
  */
         PropDetectionPipeline.PropPositions recordedPropPosition = propProcessor.getRecordedPropPosition();
 
@@ -147,7 +149,8 @@ public class Red_Right extends OpMode {
             // this is a guess. doubtful it'll be needed but you never know
             recordedPropPosition = MIDDLE;
         }
-        wrist.setPosition(0);
+        wrist.setPosition(0.57);
+        knuckle.setPosition(0.35);
         //right of the mat
         Pose2d startPose = new Pose2d(14.5, -63.75, Math.toRadians(90.00));
         switch (recordedPropPosition) {
@@ -155,18 +158,18 @@ public class Red_Right extends OpMode {
 
                 drive.setPoseEstimate(startPose);
 
-                TrajectorySequence left =  drive.trajectorySequenceBuilder(startPose)
-                        .splineTo(new Vector2d(5.85,-40.04), Math.toRadians(125.00))
+                TrajectorySequence left = drive.trajectorySequenceBuilder(startPose)
+                        .splineTo(new Vector2d(6.5,-31), Math.toRadians(125.00))
                         .setReversed(true)
                         .splineTo(new Vector2d(49.53,-29.22),Math.toRadians(0))
                         .addTemporalMarker(()->{
                             //does something
-                            target = 200;
-                            wrist.setPosition(0);
+
+                            //   knuckle.setPosition(0.8);
 
                         })
                         .build();
-                drive.followTrajectorySequence(left);
+                drive.followTrajectorySequenceAsync(left);
                 break;
 
             case MIDDLE:
@@ -174,19 +177,19 @@ public class Red_Right extends OpMode {
                 drive.setPoseEstimate(startPose);
 
                 TrajectorySequence traj = drive.trajectorySequenceBuilder(startPose)
-                        .splineTo(new Vector2d(14.50, -32), Math.toRadians(90.00))
+                        .splineTo(new Vector2d(14.50, -26), Math.toRadians(90.00))
                         .setReversed(true)
                         .splineTo(new Vector2d(50.54, -37.23), Math.toRadians(0.00))
                         .addTemporalMarker(()->{
                             //does something
-                            target = 200;
-                            wrist.setPosition(1);
+
+                           // knuckle.setPosition(0.8);
 
                         })
                         .build();
 
 
-                drive.followTrajectorySequence(traj);
+                drive.followTrajectorySequenceAsync(traj);
 
                 break;
 
@@ -200,13 +203,13 @@ public class Red_Right extends OpMode {
                         .splineTo(new Vector2d(50.63,-43.73),Math.toRadians(0))
                         .addTemporalMarker(()->{
                             //does something
-                            target = 200;
-                            wrist.setPosition(0);
+
+                       //     knuckle.setPosition(0.8);
 
                         })
                         .build();
 
-                drive.followTrajectorySequence(right);
+                drive.followTrajectorySequenceAsync(right);
                 break;
         }
 
@@ -214,8 +217,17 @@ public class Red_Right extends OpMode {
 
     @Override
     public void loop() {
-       // telemetryAprilTag();
+        // telemetryAprilTag();
         propProcessor.close();
+
+        controller.setPID(p,i,d);
+        int armPos = arm.getCurrentPosition();
+        double pid = controller.calculate(armPos,target);
+        double ff = Math.cos(Math.toRadians(target / tick_in_degrees)) * f;
+
+        double power = pid + ff;
+
+        arm.setPower(power);
 
 
         // for rr heading has some error - may be a problem.
@@ -230,14 +242,9 @@ public class Red_Right extends OpMode {
          * TODO
          *  tune pid gains for arm
          */
+        drive.update();
 
-        controller.setPID(p,i,d);
-        int armPos = arm.getCurrentPosition();
-        double pid = controller.calculate(armPos,target);
-        double ff = Math.cos(Math.toRadians(target / tick_in_degrees)) * f;
 
-        double power = pid + ff;
-        arm.setPower(power);
 
     }
 
@@ -276,5 +283,6 @@ public class Red_Right extends OpMode {
         telemetry.addLine("RBE = Range, Bearing & Elevation");
 
     }
+
 
 }

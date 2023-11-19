@@ -1,9 +1,12 @@
 package org.firstinspires.ftc.teamcode;
 
 
-import static org.firstinspires.ftc.teamcode.CameraCode.PropDetectionPipeline.PropPositions.LEFT;
 import static org.firstinspires.ftc.teamcode.CameraCode.PropDetectionPipeline.PropPositions.MIDDLE;
 import static org.firstinspires.ftc.teamcode.CameraCode.PropDetectionPipeline.PropPositions.UNFOUND;
+
+import static java.lang.Thread.sleep;
+
+import android.util.Size;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
@@ -26,8 +29,9 @@ import org.opencv.core.Scalar;
 
 import java.util.List;
 
+
 @Autonomous(preselectTeleOp = "Drive")
-public class Red_Left extends OpMode {
+public class test extends OpMode {
     private VisionPortal visionPortal;
     private PropDetectionPipeline propProcessor;
     private SampleMecanumDrive drive;
@@ -43,35 +47,38 @@ public class Red_Left extends OpMode {
     private DcMotorEx arm;
     private Servo wrist;
     private Servo knuckle;
-
     private int targetTag; // what tag should we align with on the backboard - the ID
     private double detX;  // detected X values of the wanted tag
     private double detY; // detected Y values of the wanted tag
 
+    TrajectorySequence right;
+    TrajectorySequence traj;
+    TrajectorySequence left;
 
     @Override
     public void init() {
 
+        // the current range set by lower and upper is the full range
+        // HSV takes the form: (HUE, SATURATION, VALUE)
+        // which means to select our colour, only need to change HUE
         // the domains are: ([0, 180], [0, 255], [0, 255])
+        // this is tuned to detect red, so you will need to experiment to fine tune it for your robot
+        // and experiment to fine tune it for blue
+
+        arm = hardwareMap.get(DcMotorEx.class,"arm");
+
+        wrist = hardwareMap.get(Servo.class,"wrist");
+
+        knuckle = hardwareMap.get(Servo.class,"knuckle");
 
 
         Scalar lower = new Scalar(0, 100, 100);
         Scalar upper = new Scalar(180, 255, 255);
 
-
-
         double minArea = 200; // the minimum area for the detection to consider for your prop
         drive = new SampleMecanumDrive(hardwareMap);
         controller = new PIDController(p,i,d);
         atagProcessor = new AprilTagProcessor.Builder().build();
-
-        arm = hardwareMap.get(DcMotorEx.class,"arm");
-
-
-
-        wrist = hardwareMap.get(Servo.class,"wrist");
-
-        knuckle = hardwareMap.get(Servo.class,"knuckle");
 
 
         //to change what qualifies as middle, change the left and right dividing lines
@@ -109,6 +116,7 @@ public class Red_Left extends OpMode {
         visionPortal = new VisionPortal.Builder()
                 .setCamera(hardwareMap.get(WebcamName.class, "logi")) // the camera on your robot is named "Webcam 1" by default
                 .addProcessors(atagProcessor,propProcessor)
+                .setCameraResolution(new Size(640, 480))
                 .build();
 
         // you may also want to take a look at some of the examples for instructions on
@@ -116,26 +124,71 @@ public class Red_Left extends OpMode {
         // or how to manually edit the exposure and gain, to account for different lighting conditions
         // these may be extra features for you to work on to ensure that your robot performs
         // consistently, even in different environments
+
+
         arm.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        Pose2d startPose = new Pose2d(14.5, -63.75, Math.toRadians(90.00));
+
+        drive.setPoseEstimate(startPose);
+        //
+        left = drive.trajectorySequenceBuilder(startPose)
+                .splineTo(new Vector2d(6.5,-31), Math.toRadians(125.00))
+                .setReversed(true)
+                .splineTo(new Vector2d(49.53,-29.22),Math.toRadians(0))
+                .addTemporalMarker(()->{
+                    //does something
+
+                    //   knuckle.setPosition(0.8);
+
+                })
+                .build();
+
+        //
+        traj = drive.trajectorySequenceBuilder(startPose)
+                .splineTo(new Vector2d(14.50, -26), Math.toRadians(90.00))
+                .setReversed(true)
+                .splineTo(new Vector2d(50.54, -37.23), Math.toRadians(0.00))
+                .addTemporalMarker(()->{
+                    //does something
+
+                    // knuckle.setPosition(0.8);
+
+                })
+                .build();
+
+        right = drive.trajectorySequenceBuilder(startPose)
+                .splineTo(new Vector2d(23.65, -41.27), Math.toRadians(90))
+                .setReversed(true)
+                .splineTo(new Vector2d(50.63,-43.73),Math.toRadians(0))
+                .addTemporalMarker(()->{
+                    //does something
+
+                    //     knuckle.setPosition(0.8);
+
+                })
+                .build();
+
 
     }
 
     @Override
     public void init_loop() {
         telemetry.addData("Currently Recorded Position", propProcessor.getRecordedPropPosition());
-        //telemetry.addData("Camera State", visionPortal.getCameraState());
         telemetry.addData("Currently Detected Mass Center", "x: " + propProcessor.getLargestContourX() + ", y: " + propProcessor.getLargestContourY());
-        //telemetry.addData("Currently Detected Mass Area", propProcessor.getLargestContourArea());
-        telemetryAprilTag();
-
-
+        //telemetryAprilTag();
 
     }
 
     @Override
     public void start() {
-        propProcessor.close();
 
+/*
+        TODO
+              check up on rr - could start being dumb again, tuning wise
+              widen left and right bounds because middle needs to be larger
+
+ */
         PropDetectionPipeline.PropPositions recordedPropPosition = propProcessor.getRecordedPropPosition();
 
         if (recordedPropPosition == UNFOUND) {
@@ -145,65 +198,51 @@ public class Red_Left extends OpMode {
         wrist.setPosition(0.57);
         knuckle.setPosition(0.35);
         //right of the mat
-        Pose2d startPose = new Pose2d(-33.89, -63.75, Math.toRadians(90.00));
-
         switch (recordedPropPosition) {
             case LEFT:
-
-                drive.setPoseEstimate(startPose);
-
-                TrajectorySequence left =  drive.trajectorySequenceBuilder(startPose)
-                        .splineTo(new Vector2d(-42.5, -40.0), Math.toRadians(125.0))
-                        .setReversed(true)
-                        .splineTo( new Vector2d(-21.0, -60.5), Math.toRadians(0.0))
-                        .addTemporalMarker(()->{
-                            //does something
-
-
-                        })
-                        .build();
-
-                drive.followTrajectorySequence(left);
+//
+//                drive.setPoseEstimate(startPose);
+//
+//                TrajectorySequence left = drive.trajectorySequenceBuilder(startPose)
+//                        .splineTo(new Vector2d(6.5,-31), Math.toRadians(125.00))
+//                        .setReversed(true)
+//                        .splineTo(new Vector2d(49.53,-29.22),Math.toRadians(0))
+//                        .addTemporalMarker(()->{
+//                            //does something
+//
+//                            //   knuckle.setPosition(0.8);
+//
+//                        })
+//                        .build();
+                drive.followTrajectorySequenceAsync(left);
                 break;
 
             case MIDDLE:
 
-                drive.setPoseEstimate(startPose);
+              //  drive.setPoseEstimate(startPose);
+//
+//                TrajectorySequence traj = drive.trajectorySequenceBuilder(startPose)
+//                        .splineTo(new Vector2d(14.50, -26), Math.toRadians(90.00))
+//                        .setReversed(true)
+//                        .splineTo(new Vector2d(50.54, -37.23), Math.toRadians(0.00))
+//                        .addTemporalMarker(()->{
+//                            //does something
+//
+//                            // knuckle.setPosition(0.8);
+//
+//                        })
+//                        .build();
 
-                TrajectorySequence middle = drive.trajectorySequenceBuilder(startPose)
-                        .lineTo(new Vector2d(-36.89, -33.0))
-                        .setReversed(true)
-                        .back(20)
-                        .splineTo( new Vector2d(-21.0, -58.5), Math.toRadians(0.0))
 
-                        .addTemporalMarker(()->{
-
-
-                        })
-                        .build();
-
-
-                drive.followTrajectorySequence(middle);
+                drive.followTrajectorySequenceAsync(traj);
 
                 break;
 
             case RIGHT:
 
 
-                drive.setPoseEstimate(startPose);
 
-                TrajectorySequence right =  drive.trajectorySequenceBuilder(startPose)
-                        .splineTo(new Vector2d(-28.89, -42.0), Math.toRadians(45))
-                        .setReversed(true)
-                        .splineTo( new Vector2d(-27.0, -58.5), Math.toRadians(0.0))
-                        .addTemporalMarker(()->{
-                            //does something
-
-
-                        })
-                        .build();
-
-                drive.followTrajectorySequence(right);
+                drive.followTrajectorySequenceAsync(right);
                 break;
         }
 
@@ -212,12 +251,7 @@ public class Red_Left extends OpMode {
     @Override
     public void loop() {
         // telemetryAprilTag();
-
-
-        // for rr heading has some error - may be a problem.
-        // use "yaw" ONLY after x value is close to 0 relative to the april tag.
-        // "yaw" should fix any heading error after rr path
-        // ^thought process only good for backboard april tags.
+        propProcessor.close();
 
         controller.setPID(p,i,d);
         int armPos = arm.getCurrentPosition();
@@ -227,6 +261,23 @@ public class Red_Left extends OpMode {
         double power = pid + ff;
 
         arm.setPower(power);
+
+
+        // for rr heading has some error - may be a problem.
+        // use "yaw" ONLY after x value is close to 0 relative to the april tag.
+        // "yaw" should fix any heading error after rr path
+        // ^thought process only good for backboard april tags.
+
+        // this works -
+        // drives until "Y" is less than 50. use for rr maybe.
+
+        /*
+         * TODO
+         *  tune pid gains for arm
+         */
+        drive.update();
+
+
 
     }
 
@@ -265,5 +316,6 @@ public class Red_Left extends OpMode {
         telemetry.addLine("RBE = Range, Bearing & Elevation");
 
     }
+
 
 }
