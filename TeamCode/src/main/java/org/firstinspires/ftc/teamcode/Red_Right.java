@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 
 import static org.firstinspires.ftc.teamcode.CameraCode.PropDetectionPipeline.PropPositions.MIDDLE;
+import static org.firstinspires.ftc.teamcode.CameraCode.PropDetectionPipeline.PropPositions.RIGHT;
 import static org.firstinspires.ftc.teamcode.CameraCode.PropDetectionPipeline.PropPositions.UNFOUND;
 
 import static java.lang.Thread.sleep;
@@ -18,6 +19,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.checkerframework.checker.units.qual.C;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.CameraCode.PropDetectionPipeline;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
@@ -38,18 +40,28 @@ public class Red_Right extends OpMode {
     private AprilTagProcessor atagProcessor;
     private PIDController controller;
 
-    public static double p = 0.056, i = 0, d = 0.001;    //PID gains to be tuned
+    public static double p = 0.007, i = 0, d = 0.0;    //PID gains to be tuned
 
-    public static double f = 0.01;
-    public static int target = 0;    //target position for the arm
+    public static double f = 0.16;
+    public static int target = 1;    //target position for the arm
+
+    public static double Ap = 0.018, Ai = 0, Ad = 0.0014;    //PID gains to be tuned
+    public static double Af = 0.16;
+    public static int Atarget = 1;    //target position for the arm
+
     public static double tick_in_degrees = 537.6 / 360;
-    private DcMotor intake;
+    private DcMotorEx arm1;
+    private DcMotorEx flip;
+    private Servo claw;
     private DcMotorEx arm;
-    private Servo wrist;
-    private Servo knuckle;
+
     private int targetTag; // what tag should we align with on the backboard - the ID
     private double detX;  // detected X values of the wanted tag
     private double detY; // detected Y values of the wanted tag
+
+    TrajectorySequence right;
+    TrajectorySequence traj;
+    TrajectorySequence left;
 
 
     @Override
@@ -63,10 +75,13 @@ public class Red_Right extends OpMode {
         // and experiment to fine tune it for blue
 
         arm = hardwareMap.get(DcMotorEx.class,"arm");
+        arm1 = hardwareMap.get(DcMotorEx.class,"arm1");
 
-        wrist = hardwareMap.get(Servo.class,"wrist");
+        flip = hardwareMap.get(DcMotorEx.class,"flip");
 
-        knuckle = hardwareMap.get(Servo.class,"knuckle");
+        claw = hardwareMap.get(Servo.class, "claw");
+
+
 
 
         Scalar lower = new Scalar(0, 100, 100);
@@ -124,12 +139,168 @@ public class Red_Right extends OpMode {
 
 
         arm.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        arm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        Pose2d startPose = new Pose2d(14.5, -63.75, Math.toRadians(270.00));
+
+
+
+        drive.setPoseEstimate(startPose);
+
+        left = drive.trajectorySequenceBuilder(startPose)
+                .addTemporalMarker(()->{
+                    claw.setPosition(0.85);
+                })
+                .lineTo(new Vector2d(15.5,-47.75))
+                .setReversed(true)
+                .splineTo(new Vector2d(10,-39), Math.toRadians(180))
+                .addTemporalMarker(()->{
+                      target = 230;
+                })
+                .lineTo(new Vector2d(53,-33))
+                .addTemporalMarker(()->{
+                    claw.setPosition(0.35);
+                })
+                .waitSeconds(2)
+                .back(5)
+                .addTemporalMarker(()->{
+                    target = 0;
+                })
+                .lineToLinearHeading(new Pose2d(34.3,-8.7, Math.toRadians(180)))
+                .addDisplacementMarker(160,()->{
+                    //raise the arm and open up the claw
+                    arm1.setPower(0.49);
+                    arm.setPower(0.49);
+                })
+                .addDisplacementMarker(166,()->{
+                    arm1.setPower(0.1);
+                    arm.setPower(0.1);
+                })
+                .lineTo(new Vector2d(-59,-15))
+                .addTemporalMarker(()->{
+                    claw.setPosition(0.85);
+                })
+                .waitSeconds(1)
+                .lineTo(new Vector2d(12.3,-6.7))
+                .addDisplacementMarker(230,()->{
+                    arm1.setPower(-0.1);
+                    arm.setPower(-0.1);
+                })
+                .lineToLinearHeading(new Pose2d(60,-11, Math.toRadians(0)))
+                .addTemporalMarker(()->{
+                    claw.setPosition(0.35);
+                })
+                .back(5)
+
+                .build();
+
+
+
+        traj = drive.trajectorySequenceBuilder(startPose)
+                .addTemporalMarker(()->{
+                    claw.setPosition(0.85);
+                })
+                .back(30)
+                .setReversed(false)
+                .addTemporalMarker(()->{
+                    target = 230;
+                })
+                .forward(9)
+                .splineTo(new Vector2d(53,-38.4),Math.toRadians(0))
+                .addTemporalMarker(()->{
+                    claw.setPosition(0.35);
+                })
+                .waitSeconds(2)
+                .back(5)
+                .addTemporalMarker(()->{
+                    target = 0;
+                })
+                .lineToLinearHeading(new Pose2d(34.3,-8.7, Math.toRadians(180)))
+                .addDisplacementMarker(160,()->{
+                    //raise the arm and open up the claw
+                    arm1.setPower(0.49);
+                    arm.setPower(0.49);
+                })
+                .addDisplacementMarker(166,()->{
+                    arm1.setPower(0.1);
+                    arm.setPower(0.1);
+                })
+                .lineTo(new Vector2d(-59,-15.7))
+                .addTemporalMarker(()->{
+                    claw.setPosition(0.85);
+                })
+                .waitSeconds(1)
+                .lineTo(new Vector2d(12.3,-6.7))
+                .addDisplacementMarker(230,()->{
+                    arm1.setPower(-0.1);
+                    arm.setPower(-0.1);
+                })
+                .lineToLinearHeading(new Pose2d(60,-11, Math.toRadians(0)))
+                .addTemporalMarker(()->{
+                    claw.setPosition(0.35);
+                })
+                .back(5)
+                .build();
+
+
+        right = drive.trajectorySequenceBuilder(startPose)
+                .addTemporalMarker(()->{
+                    claw.setPosition(0.85);
+                })
+                .setReversed(true)
+                .lineTo(new Vector2d(26,-39))
+                .forward(5)
+                .setReversed(false)
+                .addTemporalMarker(()->{
+                    target = 230;
+                })
+                .splineTo(new Vector2d(53,-45),Math.toRadians(0))
+                .addTemporalMarker(()->{
+                    claw.setPosition(0.35);
+                })
+                .waitSeconds(2)
+                .back(5)
+                .addTemporalMarker(()->{
+                    target = 0;
+                })
+                .lineToLinearHeading(new Pose2d(34.3,-8.7, Math.toRadians(180)))
+                .addDisplacementMarker(160,()->{
+                    //raise the arm and open up the claw
+                    arm1.setPower(0.49);
+                    arm.setPower(0.49);
+                })
+                .addDisplacementMarker(166,()->{
+                    arm1.setPower(0.1);
+                    arm.setPower(0.1);
+                })
+                .lineTo(new Vector2d(-59,-15.7))
+                .addTemporalMarker(()->{
+                    claw.setPosition(0.85);
+                })
+                .waitSeconds(1)
+                .lineTo(new Vector2d(12.3,-6.7))
+                .addDisplacementMarker(230,()->{
+                    arm1.setPower(-0.1);
+                    arm.setPower(-0.1);
+                })
+                .lineToLinearHeading(new Pose2d(60,-11, Math.toRadians(0)))
+                .addTemporalMarker(()->{
+                    claw.setPosition(0.35);
+                })
+                .back(5)
+                .build();
+
+
+
     }
 
     @Override
     public void init_loop() {
         telemetry.addData("Currently Recorded Position", propProcessor.getRecordedPropPosition());
         telemetry.addData("Currently Detected Mass Center", "x: " + propProcessor.getLargestContourX() + ", y: " + propProcessor.getLargestContourY());
+        telemetry.addData("Current contour area", propProcessor.getLargestContourArea());
+
         //telemetryAprilTag();
 
     }
@@ -145,104 +316,55 @@ public class Red_Right extends OpMode {
  */
         PropDetectionPipeline.PropPositions recordedPropPosition = propProcessor.getRecordedPropPosition();
 
-        if (recordedPropPosition == UNFOUND) {
+        if (propProcessor.getLargestContourArea() < 4000) {
             // this is a guess. doubtful it'll be needed but you never know
-            recordedPropPosition = MIDDLE;
+            recordedPropPosition = RIGHT;
         }
-        wrist.setPosition(0.57);
-        knuckle.setPosition(0.35);
+
         //right of the mat
-        Pose2d startPose = new Pose2d(14.5, -63.75, Math.toRadians(90.00));
         switch (recordedPropPosition) {
-            case LEFT:
 
-                drive.setPoseEstimate(startPose);
-
-                TrajectorySequence left = drive.trajectorySequenceBuilder(startPose)
-                        .splineTo(new Vector2d(6.5,-31), Math.toRadians(125.00))
-                        .setReversed(true)
-                        .splineTo(new Vector2d(49.53,-29.22),Math.toRadians(0))
-                        .addTemporalMarker(()->{
-                            //does something
-
-                            //   knuckle.setPosition(0.8);
-
-                        })
-                        .build();
-                drive.followTrajectorySequenceAsync(left);
+            case RIGHT:
+                drive.followTrajectorySequenceAsync(right);
                 break;
 
             case MIDDLE:
-
-                drive.setPoseEstimate(startPose);
-
-                TrajectorySequence traj = drive.trajectorySequenceBuilder(startPose)
-                        .splineTo(new Vector2d(14.50, -26), Math.toRadians(90.00))
-                        .setReversed(true)
-                        .splineTo(new Vector2d(50.54, -37.23), Math.toRadians(0.00))
-                        .addTemporalMarker(()->{
-                            //does something
-
-                           // knuckle.setPosition(0.8);
-
-                        })
-                        .build();
-
-
                 drive.followTrajectorySequenceAsync(traj);
-
+                break;
+            case LEFT:
+                drive.followTrajectorySequenceAsync(left);
                 break;
 
-            case RIGHT:
-
-                drive.setPoseEstimate(startPose);
-
-                TrajectorySequence right = drive.trajectorySequenceBuilder(startPose)
-                        .splineTo(new Vector2d(23.65, -41.27), Math.toRadians(90))
-                        .setReversed(true)
-                        .splineTo(new Vector2d(50.63,-43.73),Math.toRadians(0))
-                        .addTemporalMarker(()->{
-                            //does something
-
-                       //     knuckle.setPosition(0.8);
-
-                        })
-                        .build();
-
-                drive.followTrajectorySequenceAsync(right);
-                break;
         }
-
+        propProcessor.close();
     }
 
     @Override
     public void loop() {
         // telemetryAprilTag();
-        propProcessor.close();
 
         controller.setPID(p,i,d);
-        int armPos = arm.getCurrentPosition();
-        double pid = controller.calculate(armPos,target);
+        int flipPos = flip.getCurrentPosition();
+        double pid = controller.calculate(flipPos,target);
         double ff = Math.cos(Math.toRadians(target / tick_in_degrees)) * f;
 
         double power = pid + ff;
 
-        arm.setPower(power);
+        controller.setPID(Ap,Ai,Ad);
+        int armPos = arm1.getCurrentPosition();
+        double Apid = controller.calculate(armPos,Atarget);
+        double Aff = Math.cos(Math.toRadians(Atarget / tick_in_degrees)) * Af;
+
+        double Apower = Apid + Aff;
 
 
-        // for rr heading has some error - may be a problem.
-        // use "yaw" ONLY after x value is close to 0 relative to the april tag.
-        // "yaw" should fix any heading error after rr path
-        // ^thought process only good for backboard april tags.
 
-        // this works -
-        // drives until "Y" is less than 50. use for rr maybe.
-
-        /*
-         * TODO
-         *  tune pid gains for arm
-         */
         drive.update();
+        flip.setPower(power);
+
+        if(target == 0){
+            flip.setPower(0);
+        }
 
 
 

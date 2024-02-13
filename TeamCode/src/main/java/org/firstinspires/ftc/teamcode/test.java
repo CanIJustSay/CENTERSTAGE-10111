@@ -67,6 +67,8 @@ public class test extends OpMode {
 
         arm = hardwareMap.get(DcMotorEx.class,"arm");
 
+        arm.setDirection(DcMotorSimple.Direction.FORWARD);
+
         wrist = hardwareMap.get(Servo.class,"wrist");
 
         knuckle = hardwareMap.get(Servo.class,"knuckle");
@@ -125,12 +127,10 @@ public class test extends OpMode {
         // these may be extra features for you to work on to ensure that your robot performs
         // consistently, even in different environments
 
-
-        arm.setDirection(DcMotorSimple.Direction.REVERSE);
-
         Pose2d startPose = new Pose2d(14.5, -63.75, Math.toRadians(90.00));
 
         drive.setPoseEstimate(startPose);
+
         //
         left = drive.trajectorySequenceBuilder(startPose)
                 .splineTo(new Vector2d(6.5,-31), Math.toRadians(125.00))
@@ -138,7 +138,7 @@ public class test extends OpMode {
                 .splineTo(new Vector2d(49.53,-29.22),Math.toRadians(0))
                 .addTemporalMarker(()->{
                     //does something
-
+                    target = 100;
                     //   knuckle.setPosition(0.8);
 
                 })
@@ -151,7 +151,7 @@ public class test extends OpMode {
                 .splineTo(new Vector2d(50.54, -37.23), Math.toRadians(0.00))
                 .addTemporalMarker(()->{
                     //does something
-
+                    target = 100;
                     // knuckle.setPosition(0.8);
 
                 })
@@ -163,7 +163,7 @@ public class test extends OpMode {
                 .splineTo(new Vector2d(50.63,-43.73),Math.toRadians(0))
                 .addTemporalMarker(()->{
                     //does something
-
+                    target = 100;
                     //     knuckle.setPosition(0.8);
 
                 })
@@ -195,44 +195,17 @@ public class test extends OpMode {
             // this is a guess. doubtful it'll be needed but you never know
             recordedPropPosition = MIDDLE;
         }
-        wrist.setPosition(0.57);
-        knuckle.setPosition(0.35);
+    //    wrist.setPosition(0.83);
+    //    knuckle.setPosition(0.49);
         //right of the mat
         switch (recordedPropPosition) {
             case LEFT:
-//
-//                drive.setPoseEstimate(startPose);
-//
-//                TrajectorySequence left = drive.trajectorySequenceBuilder(startPose)
-//                        .splineTo(new Vector2d(6.5,-31), Math.toRadians(125.00))
-//                        .setReversed(true)
-//                        .splineTo(new Vector2d(49.53,-29.22),Math.toRadians(0))
-//                        .addTemporalMarker(()->{
-//                            //does something
-//
-//                            //   knuckle.setPosition(0.8);
-//
-//                        })
-//                        .build();
+
                 drive.followTrajectorySequenceAsync(left);
+
                 break;
 
             case MIDDLE:
-
-              //  drive.setPoseEstimate(startPose);
-//
-//                TrajectorySequence traj = drive.trajectorySequenceBuilder(startPose)
-//                        .splineTo(new Vector2d(14.50, -26), Math.toRadians(90.00))
-//                        .setReversed(true)
-//                        .splineTo(new Vector2d(50.54, -37.23), Math.toRadians(0.00))
-//                        .addTemporalMarker(()->{
-//                            //does something
-//
-//                            // knuckle.setPosition(0.8);
-//
-//                        })
-//                        .build();
-
 
                 drive.followTrajectorySequenceAsync(traj);
 
@@ -240,42 +213,37 @@ public class test extends OpMode {
 
             case RIGHT:
 
-
-
                 drive.followTrajectorySequenceAsync(right);
                 break;
         }
+
+        propProcessor.close();
 
     }
 
     @Override
     public void loop() {
-        // telemetryAprilTag();
-        propProcessor.close();
 
         controller.setPID(p,i,d);
+
         int armPos = arm.getCurrentPosition();
+
         double pid = controller.calculate(armPos,target);
+
         double ff = Math.cos(Math.toRadians(target / tick_in_degrees)) * f;
 
         double power = pid + ff;
 
-        arm.setPower(power);
-
-
-        // for rr heading has some error - may be a problem.
-        // use "yaw" ONLY after x value is close to 0 relative to the april tag.
-        // "yaw" should fix any heading error after rr path
-        // ^thought process only good for backboard april tags.
-
-        // this works -
-        // drives until "Y" is less than 50. use for rr maybe.
+      //  arm.setPower(power);
 
         /*
          * TODO
          *  tune pid gains for arm
          */
+
         drive.update();
+
+
 
 
 

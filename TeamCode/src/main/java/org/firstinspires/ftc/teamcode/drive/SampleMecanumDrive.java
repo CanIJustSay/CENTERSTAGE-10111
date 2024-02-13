@@ -125,6 +125,7 @@ public class SampleMecanumDrive extends MecanumDrive {
         // TODO: reverse any motors using DcMotor.setDirection()
         leftFront.setDirection(DcMotorEx.Direction.REVERSE); // add if needed
         leftRear.setDirection(DcMotorEx.Direction.REVERSE);
+
         List<Integer> lastTrackingEncPositions = new ArrayList<>();
         List<Integer> lastTrackingEncVels = new ArrayList<>();
 

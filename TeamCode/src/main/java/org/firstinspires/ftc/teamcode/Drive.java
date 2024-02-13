@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.acmerobotics.roadrunner.trajectory.MarkerCallback;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -36,75 +37,35 @@ import java.util.List;
 
 @Config
 @TeleOp(name="Drive", group=" ")
-/*
-    TODO
-        pixel detection?? for the stack in auto?
-        idea:
-            knock over pixel stack and intake the lowest one?
-            vision to sense the knocked over pixels
-
-
- */
 public class Drive extends OpMode{
-
-    /**
-     * class must extend "LinearOpMode" in order to apply telemetry
-     * also to apply other classes such as "gamepad" and hardwaremap
-     **/
-
-    // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
-    IMU imu;
-    RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.FORWARD;
-    RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.LEFT;
-    RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
+
     private PIDController controller;
 
-    public static double p = 0.056, i = 0, d = 0.001;    //PID gains to be tuned
+    public static double p = 0.013, i = 0, d = 0.001;    //PID gains to be tuned
 
-    public static double f = 0.01;
+    public static double f = 0.16;
     public static int target = 0;    //target position for the arm
     public static double tick_in_degrees = 537.6 / 360;
-    private DcMotorEx arm; // not yet on the bot - we will use PIDF gains for this maybe???
+
+    private DcMotorEx arm;
     private DcMotorEx leftFront;
     private DcMotorEx rightFront;
     private DcMotorEx leftBack;
     private DcMotorEx rightBack;
-    private DcMotor intake;
+    private DcMotorEx flip;
+    private CRServo launcher;
+    private Servo claw;
+    private DcMotorEx arm1;
 
-    private Servo wrist;
-    private boolean enterCorrective;
+    boolean useManual = true;
 
-    private VisionPortal camera;
 
-    private AprilTagProcessor atagProcessor;
-
-    private boolean correct = false;
-
-    private int targetId = 586;
-
-    private double detYaw;
-    private boolean manual;
-    private CRServo servo;
-    private Servo launcher;
-
-    private Servo knuckle;
-    private double detX;
-    private double detY;
-
-    private DcMotor lift;
 
     @Override
     public void init(){
         telemetry.addData("Status", "Initialized");
         telemetry.update();
-
-
-//        imu = hardwareMap.get(IMU.class,"imu");
-
-        lift = hardwareMap.get(DcMotor.class,"lift");
-
-        servo = hardwareMap.get(CRServo.class,"servo");
 
         controller = new PIDController(p,i,d);
 
@@ -115,28 +76,21 @@ public class Drive extends OpMode{
         leftBack  = hardwareMap.get(DcMotorEx.class, "leftBack");
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
 
+        flip = hardwareMap.get(DcMotorEx.class,"flip");
+
+        claw = hardwareMap.get(Servo.class,"claw");
+
+        launcher = hardwareMap.get(CRServo.class,"launcher");
+
         arm = hardwareMap.get(DcMotorEx.class,"arm");
-
-        launcher = hardwareMap.get(Servo.class,"launcher");
-
-//        atagProcessor = new AprilTagProcessor.Builder().build();
-
-        wrist = hardwareMap.get(Servo.class,"wrist");
-
-        knuckle = hardwareMap.get(Servo.class,"knuckle");
-
-//        camera = new VisionPortal.Builder()
-//                .setCamera(hardwareMap.get(WebcamName.class,"logi"))
-//                .addProcessor(atagProcessor)
-//                .build();
-
-        intake = hardwareMap.get(DcMotor.class, "intake");
+        arm1 = hardwareMap.get(DcMotorEx.class,"arm1");
 
         leftFront.setDirection(DcMotor.Direction.REVERSE);
         leftBack.setDirection(DcMotor.Direction.REVERSE);
-        wrist.setDirection(Servo.Direction.REVERSE);
 
-        manual = false;
+
+
+
     }
     @Override
     public void init_loop(){
@@ -152,160 +106,92 @@ public class Drive extends OpMode{
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        flip.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         arm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        arm1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         arm.setDirection(DcMotorSimple.Direction.REVERSE);
+
 
     }
 
-    /***
-     *
-     *
-
-     * Intake = done
-     * Lift   = done
-     * Knuckle = done
-     * Arm     = could be improved, but done
-     * Wrist   = done
-     * Drive   = done
-     * Lift Servo = done
-     * Launcher = done
-     *
-     * Auto:
-     *  I have no clue. Should work, but you know.
-     *
-     */
-
     @Override
-    public void loop(){
-
+    public void loop() {
 
         float leftStickY = -gamepad1.left_stick_y;
         float leftStickX = gamepad1.left_stick_x;
         float rightStickX = gamepad1.right_stick_x;
         boolean rightBumper = gamepad1.right_bumper;
+        boolean y = gamepad1.y;
+
+        //Driver 1 - Driving Mech
+        {
+            //Wheel movement
+            {
+                //drive
+                if (gamepad1.left_bumper) {
+                    leftFront.setPower(0);
+                    leftBack.setPower(0);
+                    rightFront.setPower(0);
+                    rightBack.setPower(0);
+                } else {
+                    leftFront.setPower((leftStickY + leftStickX + rightStickX) / (rightBumper ? 3 : 1));
+                    leftBack.setPower((leftStickY - leftStickX + rightStickX) / (rightBumper ? 3 : 1));
+                    rightFront.setPower((leftStickY - leftStickX - rightStickX) / (rightBumper ? 3 : 1));
+                    rightBack.setPower((leftStickY + leftStickX - rightStickX) / (rightBumper ? 3 : 1));
+                }
+            }
 
 
-
-        if(gamepad1.left_trigger > 0){
-            intake.setPower(1);
-        } else if(gamepad1.right_trigger > 0) {
-            intake.setPower(-1);
-        } else {
-            intake.setPower(0);
         }
 
-        /**
-         * fL = y+x+r
-         * rL = y-x+r
-         * fR = y-x-r
-         * rR = y+x-r
-         */
+        if(y){
+            launcher.setPower(-1);
 
-        //drive
-        if(gamepad1.left_bumper) {
-            leftFront.setPower(0);
-            leftBack.setPower(0);
-            rightFront.setPower(0);
-            rightBack.setPower(0);
-        } else {
-            leftFront.setPower((leftStickY + leftStickX + rightStickX) / (rightBumper ? 3 : 1) );
-            leftBack.setPower((leftStickY - leftStickX + rightStickX) / (rightBumper ? 3 : 1) );
-            rightFront.setPower((leftStickY - leftStickX - rightStickX) / (rightBumper ? 3 : 1) );
-            rightBack.setPower((leftStickY + leftStickX - rightStickX) / (rightBumper ? 3 : 1) );
         }
 
 
-        lift.setPower(gamepad2.right_stick_y);
+        //Driver 2 - Scoring Mech
+        {
+            //arm mech
+            {
+                controller.setPID(p,i,d);
+                int flipPos = flip.getCurrentPosition();
+                double pid = controller.calculate(flipPos,target);
+                double ff = Math.cos(Math.toRadians(target / tick_in_degrees)) * f;
 
-        //scissor lift
-        if (gamepad1.a){
-            servo.setPower(1);
-        } else if (gamepad1.b) {
-            servo.setPower(0);
+                double power = pid + ff;
+
+               // flip.setPower(power);
+
+                if((gamepad2.left_stick_y > 0 || gamepad2.left_stick_y < 0)){
+                    arm.setPower(-gamepad2.left_stick_y);
+                    arm1.setPower(-gamepad2.left_stick_y);
+                } else if(gamepad2.left_stick_y == 0) {
+                    arm.setPower(0.1);
+                   arm1.setPower(0.1);
+                }
+                if(gamepad2.right_stick_y != 0){ useManual = true; }
+                if(gamepad2.y){ useManual = false; target = 230; }
+
+                if(useManual) flip.setPower(-gamepad2.right_stick_y / 3);
+
+                if(!useManual) flip.setPower(power);
+            }
+
+            if(gamepad2.right_bumper){
+                claw.setPosition(0.35);
+            }
+            else {
+                claw.setPosition(0.85);
+            }
+
         }
-
-        knuckle.setPosition( gamepad2.dpad_up ? 0.8 : (gamepad2.dpad_left ? 0.5 : (gamepad2.dpad_right ? 0.26 : 0.35 ) ) );
-        //wrist positioning
-        if(gamepad2.a){
-            wrist.setPosition(0);
-        } else {
-            wrist.setPosition(0.57);
-        }
-
-        //needs to stay level until told otherwise, as it goes up, the angle should change
-        //consistenly with the wrist
-
-        if(gamepad1.y){
-            launcher.setPosition(0);
-        }
-
-
-        // target += (gamepad2.left_stick_y * 5);
-        //arm pid
-        controller.setPID(p,i,d);
-
-        int armPos = arm.getCurrentPosition();
-        double pid = controller.calculate(armPos,target);
-        double ff = Math.cos(Math.toRadians(target / tick_in_degrees)) * f;
-
-        double power;
-      //  target = 100;
-        power = pid + ff;
-
-        arm.setPower(
-                -gamepad2.left_stick_y
-               // power
-        );
-
-
-        /**
-         if(gamepad2.x && !manual){
-         manual = true;
-         } else if(gamepad2.x && manual){
-         manual = false;
-         }
-         */
-
-//
-//        telemetry.addData("Current Pos", arm.getCurrentPosition());
-//        telemetry.addData("Arm Pos",armPos);
-//        telemetry.addData("Target", target);
-//
-//
-//
-//
-//
-//        telemetryAprilTag();
-//
-//        telemetry.addData("Hub orientation", "Logo=%s   USB=%s\n ", logoDirection, usbDirection);
-//
-//        // Check to see if heading reset is requested
-//        if (gamepad1.y) {
-//            telemetry.addData("Yaw", "Resetting\n");
-//            imu.resetYaw();
-//        } else {
-//            telemetry.addData("Yaw", "Press Y (triangle) on Gamepad to reset\n");
-//        }
-//
-//        // Retrieve Rotational Angles and Velocities
-//        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-//        AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
-//
-//        telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
-//        telemetry.addData("Pitch (X)", "%.2f Deg.", orientation.getPitch(AngleUnit.DEGREES));
-//        telemetry.addData("Roll (Y)", "%.2f Deg.\n", orientation.getRoll(AngleUnit.DEGREES));
-//        telemetry.addData("Yaw (Z) velocity", "%.2f Deg/Sec", angularVelocity.zRotationRate);
-//        telemetry.addData("Pitch (X) velocity", "%.2f Deg/Sec", angularVelocity.xRotationRate);
-//        telemetry.addData("Roll (Y) velocity", "%.2f Deg/Sec", angularVelocity.yRotationRate);
-//        telemetry.update();
-
 
         telemetry.addData("Status", "Run Time: " + runtime.toString());
         telemetry.update();
+
     }
     @Override
     public void stop(){
@@ -313,20 +199,6 @@ public class Drive extends OpMode{
         leftBack.setPower(0);
         rightFront.setPower(0);
         rightBack.setPower(0);
-
-//        if(camera.getCameraState() == VisionPortal.CameraState.STREAMING){
-//            camera.stopLiveView();
-//            camera.stopStreaming();
-//        }
     }
-
-
-
-
-
-
-
-
-
 
 }
