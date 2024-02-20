@@ -155,8 +155,8 @@ public class Red_Left extends OpMode {
                             arm.setPower(0.35);
                             arm1.setPower(0.35);
                         })
-                        .lineTo(new Vector2d(52.5,-33))
-                        .addDisplacementMarker(145,()->{
+                        .lineTo(new Vector2d(52.8,-32.8))
+                        .addDisplacementMarker(144,()->{
                             //stop arm from going higher
                             arm.setPower(0.1);
                             arm1.setPower(0.1);
@@ -184,8 +184,8 @@ public class Red_Left extends OpMode {
                             arm.setPower(0.35);
                             arm1.setPower(0.35);
                         })
-                        .lineTo(new Vector2d(52.5,-37))
-                        .addDisplacementMarker(145,()->{
+                        .lineTo(new Vector2d(52.9,-39))
+                        .addDisplacementMarker(144,()->{
                             arm.setPower(0.1);
                             arm1.setPower(0.1);
                         })
@@ -213,7 +213,7 @@ public class Red_Left extends OpMode {
                             arm.setPower(0.35);
                             arm1.setPower(0.35);
                         })
-                        .lineTo(new Vector2d(52.5,-48))
+                        .lineTo(new Vector2d(52.5,-43.4))
                         .addDisplacementMarker(135,()->{
                             arm.setPower(0.1);
                             arm1.setPower(0.1);

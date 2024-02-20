@@ -173,7 +173,7 @@ public class Drive extends OpMode{
                    arm1.setPower(0.1);
                 }
                 if(gamepad2.right_stick_y != 0){ useManual = true; }
-                if(gamepad2.y){ useManual = false; target = 230; }
+                if(gamepad2.y){ useManual = false; target = 170; }
 
                 if(useManual) flip.setPower(-gamepad2.right_stick_y / 3);
 

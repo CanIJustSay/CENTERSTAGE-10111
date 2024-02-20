@@ -161,13 +161,78 @@ public class Red_Right extends OpMode {
                 .lineTo(new Vector2d(53,-33))
                 .addTemporalMarker(()->{
                     claw.setPosition(0.35);
+                    arm.setPower(0.2);
+                    arm1.setPower(0.2);
                 })
                 .waitSeconds(2)
                 .back(5)
                 .addTemporalMarker(()->{
                     target = 0;
+                    arm.setPower(-0.1);
+                    arm1.setPower(-0.1);
                 })
-                .lineToLinearHeading(new Pose2d(34.3,-8.7, Math.toRadians(180)))
+                .lineToLinearHeading(new Pose2d(34.3,-9.7, Math.toRadians(180)))
+//               .strafeRight(27)
+//                .forward(17)
+                .addDisplacementMarker(160,()->{
+                    //raise the arm and open up the claw
+                    arm1.setPower(0.49);
+                    arm.setPower(0.49);
+                })
+                .addDisplacementMarker(165,()->{
+                    arm1.setPower(0.1);
+                    arm.setPower(0.1);
+                })
+                .lineTo(new Vector2d(-59,-14.6))
+                .addTemporalMarker(()->{
+                    claw.setPosition(0.85);
+                })
+                .waitSeconds(1)
+                .lineTo(new Vector2d(12.3,-6.7))
+                .addDisplacementMarker(230,()->{
+                    arm1.setPower(-0.1);
+                    arm.setPower(-0.1);
+                })
+                .lineToLinearHeading(new Pose2d(60,-13, Math.toRadians(0)))
+                //for if they park in the triangle area
+//                .lineToLinearHeading(new Pose2d(38,-6.7, Math.toRadians(0)))
+//                .strafeRight(55)
+//                .forward(20)
+                .addTemporalMarker(()->{
+                    claw.setPosition(0.35);
+                })
+                .back(5)
+
+                .build();
+
+
+
+        traj = drive.trajectorySequenceBuilder(startPose)
+                .addTemporalMarker(()->{
+                    claw.setPosition(0.85);
+                })
+                .back(29.5)
+                .setReversed(false)
+                .addTemporalMarker(()->{
+                    target = 230;
+                })
+                .forward(9)
+                .splineTo(new Vector2d(53,-38.4),Math.toRadians(0))
+                .addTemporalMarker(()->{
+                    claw.setPosition(0.35);
+                    arm.setPower(0.2);
+                    arm1.setPower(0.2);
+                })
+                .waitSeconds(2)
+                .back(5)
+                .addTemporalMarker(()->{
+                    target = 0;
+                    arm.setPower(-0.1);
+                    arm1.setPower(-0.1);
+                })
+//                .strafeRight(27)
+//                .forward(17)
+                .lineToLinearHeading(new Pose2d(34.3,-9.7, Math.toRadians(180)))
                 .addDisplacementMarker(160,()->{
                     //raise the arm and open up the claw
                     arm1.setPower(0.49);
@@ -187,56 +252,11 @@ public class Red_Right extends OpMode {
                     arm1.setPower(-0.1);
                     arm.setPower(-0.1);
                 })
-                .lineToLinearHeading(new Pose2d(60,-11, Math.toRadians(0)))
-                .addTemporalMarker(()->{
-                    claw.setPosition(0.35);
-                })
-                .back(5)
-
-                .build();
-
-
-
-        traj = drive.trajectorySequenceBuilder(startPose)
-                .addTemporalMarker(()->{
-                    claw.setPosition(0.85);
-                })
-                .back(30)
-                .setReversed(false)
-                .addTemporalMarker(()->{
-                    target = 230;
-                })
-                .forward(9)
-                .splineTo(new Vector2d(53,-38.4),Math.toRadians(0))
-                .addTemporalMarker(()->{
-                    claw.setPosition(0.35);
-                })
-                .waitSeconds(2)
-                .back(5)
-                .addTemporalMarker(()->{
-                    target = 0;
-                })
-                .lineToLinearHeading(new Pose2d(34.3,-8.7, Math.toRadians(180)))
-                .addDisplacementMarker(160,()->{
-                    //raise the arm and open up the claw
-                    arm1.setPower(0.49);
-                    arm.setPower(0.49);
-                })
-                .addDisplacementMarker(166,()->{
-                    arm1.setPower(0.1);
-                    arm.setPower(0.1);
-                })
-                .lineTo(new Vector2d(-59,-15.7))
-                .addTemporalMarker(()->{
-                    claw.setPosition(0.85);
-                })
-                .waitSeconds(1)
-                .lineTo(new Vector2d(12.3,-6.7))
-                .addDisplacementMarker(230,()->{
-                    arm1.setPower(-0.1);
-                    arm.setPower(-0.1);
-                })
-                .lineToLinearHeading(new Pose2d(60,-11, Math.toRadians(0)))
+                .lineToLinearHeading(new Pose2d(60,-13, Math.toRadians(0)))
+                //for if they park in the triangle area
+//                .lineToLinearHeading(new Pose2d(38,6.7, Math.toRadians(0)))
+//                .strafeRight(55)
+//                .forward(20)
                 .addTemporalMarker(()->{
                     claw.setPosition(0.35);
                 })
@@ -249,7 +269,7 @@ public class Red_Right extends OpMode {
                     claw.setPosition(0.85);
                 })
                 .setReversed(true)
-                .lineTo(new Vector2d(26,-39))
+                .lineTo(new Vector2d(26,-38))
                 .forward(5)
                 .setReversed(false)
                 .addTemporalMarker(()->{
@@ -258,13 +278,19 @@ public class Red_Right extends OpMode {
                 .splineTo(new Vector2d(53,-45),Math.toRadians(0))
                 .addTemporalMarker(()->{
                     claw.setPosition(0.35);
+                    arm.setPower(0.2);
+                    arm1.setPower(0.2);
                 })
                 .waitSeconds(2)
                 .back(5)
                 .addTemporalMarker(()->{
                     target = 0;
+                    arm.setPower(-0.1);
+                    arm1.setPower(-0.1);
                 })
-                .lineToLinearHeading(new Pose2d(34.3,-8.7, Math.toRadians(180)))
+//                .strafeRight(27)
+//                .forward(17)
+                .lineToLinearHeading(new Pose2d(34.3,-9.7, Math.toRadians(180)))
                 .addDisplacementMarker(160,()->{
                     //raise the arm and open up the claw
                     arm1.setPower(0.49);
@@ -274,7 +300,7 @@ public class Red_Right extends OpMode {
                     arm1.setPower(0.1);
                     arm.setPower(0.1);
                 })
-                .lineTo(new Vector2d(-59,-15.7))
+                .lineTo(new Vector2d(-59,-14.8))
                 .addTemporalMarker(()->{
                     claw.setPosition(0.85);
                 })
@@ -284,7 +310,11 @@ public class Red_Right extends OpMode {
                     arm1.setPower(-0.1);
                     arm.setPower(-0.1);
                 })
-                .lineToLinearHeading(new Pose2d(60,-11, Math.toRadians(0)))
+                .lineToLinearHeading(new Pose2d(60,-13, Math.toRadians(0)))
+                //for if they park in the triangle area
+//                .lineToLinearHeading(new Pose2d(38,6.7, Math.toRadians(0)))
+//                .strafeRightt(55)
+//                .forward(20)
                 .addTemporalMarker(()->{
                     claw.setPosition(0.35);
                 })

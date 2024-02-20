@@ -146,6 +146,7 @@ public class Blue_Right extends OpMode {
                 })
                 .back(10)
                 .setReversed(true)
+                .forward(7)
                 .splineTo(new Vector2d(-28,39), Math.toRadians(0))
                 .setReversed(false)
                 .splineTo(new Vector2d(-25,60.5), Math.toRadians(0))
@@ -157,7 +158,8 @@ public class Blue_Right extends OpMode {
                       arm.setPower(0.35);
                      arm1.setPower(0.35);
                 })
-                .lineTo(new Vector2d(52.5,48))
+                .strafeRight(7)
+                .lineTo(new Vector2d(52.9,43.4))
                 .addDisplacementMarker(135,()->{
                       arm.setPower(0.1);
                       arm1.setPower(0.1);
@@ -185,8 +187,8 @@ public class Blue_Right extends OpMode {
                     arm.setPower(0.35);
                     arm1.setPower(0.35);
                 })
-                .lineTo(new Vector2d(52.5,37))
-                .addDisplacementMarker(145,()->{
+                .lineTo(new Vector2d(53.1,38))
+                .addDisplacementMarker(143,()->{
                     //stop arm from going higher
                     arm.setPower(0.1);
                     arm1.setPower(0.1);
@@ -214,8 +216,9 @@ public class Blue_Right extends OpMode {
                     arm.setPower(0.35);
                     arm1.setPower(0.35);
                 })
-                .lineTo(new Vector2d(52.5,33))
-                .addDisplacementMarker(145,()->{
+
+                .lineTo(new Vector2d(52.9,33))
+                .addDisplacementMarker(144,()->{
                     //stop arm from going higher
                     arm.setPower(0.1);
                     arm1.setPower(0.1);

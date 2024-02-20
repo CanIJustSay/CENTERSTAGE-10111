@@ -141,22 +141,26 @@ public class Blue_Left extends OpMode {
                      claw.setPosition(0.85);
                 })
                 .setReversed(true)
-                .lineTo(new Vector2d(26,39))
+                .lineTo(new Vector2d(26,38))
                 .forward(5)
                 .setReversed(false)
                 .addTemporalMarker(()->{
                      target = 230;
                 })
-                .splineTo(new Vector2d(53,45),Math.toRadians(0))
+                .splineTo(new Vector2d(53,46),Math.toRadians(0))
                 .addTemporalMarker(()->{
                     claw.setPosition(0.35);
+                    arm.setPower(0.2);
+                    arm1.setPower(0.2);
                 })
                 .waitSeconds(2)
                 .back(5)
                 .addTemporalMarker(()->{
                      target = 0;
+                     arm.setPower(-0.1);
+                     arm1.setPower(-0.1);
                 })
-                .lineToLinearHeading(new Pose2d(34.3,8.7, Math.toRadians(180)))
+                .lineToLinearHeading(new Pose2d(34.3,9.7, Math.toRadians(180)))
                 .addDisplacementMarker(160,()->{
                     //raise the arm and open up the claw
                      arm1.setPower(0.49);
@@ -166,7 +170,7 @@ public class Blue_Left extends OpMode {
                     arm1.setPower(0.1);
                     arm.setPower(0.1);
                 })
-                .lineTo(new Vector2d(-59,15.7))
+                .lineTo(new Vector2d(-59,15.9))
                 .addTemporalMarker(()->{
                      claw.setPosition(0.85);
                 })
@@ -176,7 +180,11 @@ public class Blue_Left extends OpMode {
                     arm1.setPower(-0.1);
                     arm.setPower(-0.1);
                 })
-                .lineToLinearHeading(new Pose2d(60,11, Math.toRadians(0)))
+                .lineToLinearHeading(new Pose2d(60,13, Math.toRadians(0)))
+                //for if they park in the triangle area
+//                .lineToLinearHeading(new Pose2d(38,6.7, Math.toRadians(0)))
+//                .strafeLeft(55)
+//                .forward(20)
                 .addTemporalMarker(()->{
                      claw.setPosition(0.35);
                 })
@@ -188,7 +196,7 @@ public class Blue_Left extends OpMode {
                 .addTemporalMarker(()->{
                     claw.setPosition(0.85);
                 })
-                .back(30)
+                .back(29.5)
                 .setReversed(false)
                 .addTemporalMarker(()->{
                     target = 230;
@@ -197,13 +205,17 @@ public class Blue_Left extends OpMode {
                 .splineTo(new Vector2d(53,38.4),Math.toRadians(0))
                 .addTemporalMarker(()->{
                     claw.setPosition(0.35);
+                    arm.setPower(0.2);
+                    arm1.setPower(0.2);
                 })
                 .waitSeconds(2)
                 .back(5)
                 .addTemporalMarker(()->{
                     target = 0;
+                    arm.setPower(-0.1);
+                    arm1.setPower(-0.1);
                 })
-                .lineToLinearHeading(new Pose2d(34.3,8.7, Math.toRadians(180)))
+                .lineToLinearHeading(new Pose2d(34.3,9.7, Math.toRadians(180)))
                 .addDisplacementMarker(160,()->{
                     //raise the arm and open up the claw
                     arm1.setPower(0.49);
@@ -213,7 +225,7 @@ public class Blue_Left extends OpMode {
                     arm1.setPower(0.1);
                     arm.setPower(0.1);
                 })
-                .lineTo(new Vector2d(-59,15.7))
+                .lineTo(new Vector2d(-57,15))
                 .addTemporalMarker(()->{
                     claw.setPosition(0.85);
                 })
@@ -223,7 +235,11 @@ public class Blue_Left extends OpMode {
                     arm1.setPower(-0.1);
                     arm.setPower(-0.1);
                 })
-                .lineToLinearHeading(new Pose2d(60,11, Math.toRadians(0)))
+                .lineToLinearHeading(new Pose2d(60,13, Math.toRadians(0)))
+                //for if they park in the triangle area
+//                .lineToLinearHeading(new Pose2d(38,6.7, Math.toRadians(0)))
+//                .strafeLeft(55)
+//                .forward(20)
                 .addTemporalMarker(()->{
                     claw.setPosition(0.35);
                 })
@@ -244,13 +260,17 @@ public class Blue_Left extends OpMode {
                 .lineTo(new Vector2d(53,33))
                 .addTemporalMarker(()->{
                     claw.setPosition(0.35);
+                    arm.setPower(0.2);
+                    arm1.setPower(0.2);
                 })
                 .waitSeconds(2)
                 .back(5)
                 .addTemporalMarker(()->{
                     target = 0;
+                    arm.setPower(-0.1);
+                    arm1.setPower(-0.1);
                 })
-                .lineToLinearHeading(new Pose2d(34.3,8.7, Math.toRadians(180)))
+                .lineToLinearHeading(new Pose2d(34.3,9.7, Math.toRadians(180)))
                 .addDisplacementMarker(160,()->{
                     //raise the arm and open up the claw
                     arm1.setPower(0.49);
@@ -260,7 +280,7 @@ public class Blue_Left extends OpMode {
                     arm1.setPower(0.1);
                     arm.setPower(0.1);
                 })
-                .lineTo(new Vector2d(-59,15))
+                .lineTo(new Vector2d(-59,15.7))
                 .addTemporalMarker(()->{
                     claw.setPosition(0.85);
                 })
@@ -270,7 +290,11 @@ public class Blue_Left extends OpMode {
                     arm1.setPower(-0.1);
                     arm.setPower(-0.1);
                 })
-                .lineToLinearHeading(new Pose2d(60,11, Math.toRadians(0)))
+                .lineToLinearHeading(new Pose2d(60,13, Math.toRadians(0)))
+                //for if they park in the triangle area
+//                .lineToLinearHeading(new Pose2d(38,6.7, Math.toRadians(0)))
+//                .strafeLeft(55)
+//                .forward(20)
                 .addTemporalMarker(()->{
                     claw.setPosition(0.35);
                 })
